@@ -1,5 +1,6 @@
 import sqlite3
 from datetime import datetime, timezone
+from pathlib import Path
 
 
 def get_connection(db_path: str) -> sqlite3.Connection:
@@ -19,7 +20,8 @@ def init_db(conn: sqlite3.Connection) -> None:
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
             file_path TEXT NOT NULL UNIQUE,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL,
+            content TEXT
         )
     """)
     conn.execute("""
@@ -113,3 +115,65 @@ def get_matches(
 
     cursor = conn.execute(query, (resume_id,))
     return cursor.fetchall()
+
+
+def create_resume(
+    conn: sqlite3.Connection,
+    resumes_dir: str,
+    name: str,
+    content: str,
+) -> int:
+    created_at = datetime.now(timezone.utc).isoformat()
+    cursor = conn.execute(
+        "INSERT INTO resumes (name, file_path, created_at, content) VALUES (?, ?, ?, ?)",
+        (name, "", created_at, content),
+    )
+    conn.commit()
+    resume_id = cursor.lastrowid
+
+    Path(resumes_dir).mkdir(parents=True, exist_ok=True)
+    file_path = str(Path(resumes_dir) / f"{resume_id}.md")
+    Path(file_path).write_text(content)
+
+    conn.execute(
+        "UPDATE resumes SET file_path = ? WHERE id = ?",
+        (file_path, resume_id),
+    )
+    conn.commit()
+
+    return resume_id
+
+
+def update_resume(
+    conn: sqlite3.Connection,
+    resume_id: int,
+    name: str,
+    content: str,
+) -> None:
+    conn.execute(
+        "UPDATE resumes SET name = ?, content = ? WHERE id = ?",
+        (name, content, resume_id),
+    )
+    conn.commit()
+
+    cursor = conn.execute("SELECT file_path FROM resumes WHERE id = ?", (resume_id,))
+    row = cursor.fetchone()
+    if row:
+        file_path = row["file_path"]
+        Path(file_path).write_text(content)
+
+
+def delete_resume(
+    conn: sqlite3.Connection,
+    resume_id: int,
+) -> None:
+    cursor = conn.execute("SELECT file_path FROM resumes WHERE id = ?", (resume_id,))
+    row = cursor.fetchone()
+    file_path = row["file_path"] if row else None
+
+    conn.execute("DELETE FROM matches WHERE resume_id = ?", (resume_id,))
+    conn.execute("DELETE FROM resumes WHERE id = ?", (resume_id,))
+    conn.commit()
+
+    if file_path:
+        Path(file_path).unlink(missing_ok=True)

@@ -1,4 +1,15 @@
-from webapp.db import get_connection, init_db, register_resume, list_resumes, upsert_match, get_matches, get_resume
+from webapp.db import (
+    get_connection,
+    init_db,
+    register_resume,
+    list_resumes,
+    upsert_match,
+    get_matches,
+    get_resume,
+    create_resume,
+    update_resume,
+    delete_resume,
+)
 
 
 def test_db_schema(tmp_path):
@@ -354,6 +365,142 @@ def test_get_resume_not_found(tmp_path):
 
     resume = get_resume(conn, 999999)
 
+    assert resume is None
+
+    conn.close()
+
+
+def test_create_resume(tmp_path):
+    db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
+    conn = get_connection(str(db_path))
+    init_db(conn)
+
+    content = "# My Resume\n\nExperienced developer"
+    resume_id = create_resume(conn, str(resumes_dir), "My Resume", content)
+
+    assert isinstance(resume_id, int)
+    assert resume_id > 0
+
+    resume = get_resume(conn, resume_id)
+    assert resume is not None
+    assert resume["name"] == "My Resume"
+    assert resume["content"] == content
+    assert resume["file_path"] != ""
+
+    file_path = resume["file_path"]
+    assert (tmp_path / "resumes" / f"{resume_id}.md").exists()
+    import pathlib
+    assert pathlib.Path(file_path).read_text() == content
+
+    conn.close()
+
+
+def test_update_resume(tmp_path):
+    db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
+    conn = get_connection(str(db_path))
+    init_db(conn)
+
+    content = "# Original Resume"
+    resume_id = create_resume(conn, str(resumes_dir), "Original Name", content)
+
+    original_resume = get_resume(conn, resume_id)
+    original_file_path = original_resume["file_path"]
+
+    new_content = "# Updated Resume\n\nNew content here"
+    update_resume(conn, resume_id, "Updated Name", new_content)
+
+    updated_resume = get_resume(conn, resume_id)
+    assert updated_resume["name"] == "Updated Name"
+    assert updated_resume["content"] == new_content
+    assert updated_resume["file_path"] == original_file_path
+
+    import pathlib
+    assert pathlib.Path(original_file_path).read_text() == new_content
+
+    conn.close()
+
+
+def test_delete_resume(tmp_path):
+    db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
+    conn = get_connection(str(db_path))
+    init_db(conn)
+
+    content = "# My Resume"
+    resume_id = create_resume(conn, str(resumes_dir), "My Resume", content)
+
+    resume = get_resume(conn, resume_id)
+    file_path = resume["file_path"]
+
+    upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file="job1.txt",
+        title="Software Engineer",
+        site="TechCorp",
+        location="San Francisco",
+        workplace="remote",
+        source_url="https://example.com/job1",
+        score=0.95,
+        computed_at="2024-01-01T00:00:00",
+    )
+
+    matches_before = get_matches(conn, resume_id)
+    assert len(matches_before) == 1
+
+    delete_resume(conn, resume_id)
+
+    resume_after = get_resume(conn, resume_id)
+    assert resume_after is None
+
+    matches_after = get_matches(conn, resume_id)
+    assert len(matches_after) == 0
+
+    import pathlib
+    assert not pathlib.Path(file_path).exists()
+
+    conn.close()
+
+
+def test_delete_resume_missing_file(tmp_path):
+    db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
+    conn = get_connection(str(db_path))
+    init_db(conn)
+
+    content = "# My Resume"
+    resume_id = create_resume(conn, str(resumes_dir), "My Resume", content)
+
+    resume = get_resume(conn, resume_id)
+    file_path = resume["file_path"]
+
+    import pathlib
+    pathlib.Path(file_path).unlink()
+
+    delete_resume(conn, resume_id)
+
+    resume_after = get_resume(conn, resume_id)
+    assert resume_after is None
+
+    conn.close()
+
+
+def test_delete_resume_twice(tmp_path):
+    db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
+    conn = get_connection(str(db_path))
+    init_db(conn)
+
+    content = "# My Resume"
+    resume_id = create_resume(conn, str(resumes_dir), "My Resume", content)
+
+    delete_resume(conn, resume_id)
+
+    delete_resume(conn, resume_id)
+
+    resume = get_resume(conn, resume_id)
     assert resume is None
 
     conn.close()
