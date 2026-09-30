@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main>
+    <h1>Edit Resume</h1>
+    <form method="post" action="/resumes/{{ resume['id'] }}/edit">
+        <div>
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" value="{{ resume['name'] }}" required>
+        </div>
+        <div>
+            <label for="content">Content:</label>
+            <textarea id="content" name="content" required>{{ resume['content'] }}</textarea>
+        </div>
+        <button type="submit">Save</button>
+    </form>
+</main>
+{% endblock %}

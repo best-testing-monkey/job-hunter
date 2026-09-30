@@ -86,6 +86,27 @@ def rematch_resume(resume_id):
     return redirect(url_for("main.resume_detail", resume_id=resume_id))
 
 
+@bp.route("/resumes/<int:resume_id>/edit", methods=["GET"])
+def edit_resume_get(resume_id):
+    conn = get_db()
+    resume = db.get_resume(conn, resume_id)
+    if resume is None:
+        abort(404)
+    return render_template("resume_edit.html", resume=resume)
+
+
+@bp.route("/resumes/<int:resume_id>/edit", methods=["POST"])
+def edit_resume_post(resume_id):
+    conn = get_db()
+    resume = db.get_resume(conn, resume_id)
+    if resume is None:
+        abort(404)
+    name = request.form["name"]
+    content = request.form["content"]
+    db.update_resume(conn, resume_id, name, content)
+    return redirect(url_for("main.resume_detail", resume_id=resume_id))
+
+
 @bp.route("/resumes", methods=["POST"])
 def register_resume_route():
     name = request.form["name"]

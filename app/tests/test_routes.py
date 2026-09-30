@@ -200,3 +200,76 @@ def test_rematch_resume(tmp_path):
     assert matches[0]["site"] == "TechCorp"
     assert matches[1]["title"] == "Senior Engineer"
     assert matches[1]["score"] == 0.85
+
+
+def test_edit_resume_get(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume\nExperienced developer")
+    conn.close()
+
+    response = client.get(f"/resumes/{resume_id}/edit")
+    assert response.status_code == 200
+    assert b"My Resume" in response.data
+    assert b"# My Resume\nExperienced developer" in response.data
+
+
+def test_edit_resume_get_not_found(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    client = app.test_client()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    conn.close()
+
+    response = client.get("/resumes/999999/edit")
+    assert response.status_code == 404
+
+
+def test_edit_resume_post(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
+    conn.close()
+
+    new_name = "Updated Resume"
+    new_content = "# Updated Resume\nSenior developer with 10 years experience"
+
+    response = client.post(f"/resumes/{resume_id}/edit", data={"name": new_name, "content": new_content})
+    assert response.status_code == 302
+    assert response.location.endswith(f"/resumes/{resume_id}")
+
+    conn = db.get_connection(app.config["DATABASE"])
+    resume = db.get_resume(conn, resume_id)
+    conn.close()
+
+    assert resume["name"] == new_name
+    assert resume["content"] == new_content
+
+    from pathlib import Path
+    resume_file = Path(app.config["RESUMES_DIR"]) / f"{resume_id}.md"
+    assert resume_file.read_text() == new_content
+
+
+def test_edit_resume_post_not_found(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    client = app.test_client()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    conn.close()
+
+    response = client.post("/resumes/999999/edit", data={"name": "Test", "content": "Test"})
+    assert response.status_code == 404

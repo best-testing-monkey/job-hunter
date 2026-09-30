@@ -5,6 +5,8 @@
     <h1>{{ resume['name'] }}</h1>
     <p>File: {{ resume['file_path'] }}</p>
 
+    <a href="/resumes/{{ resume['id'] }}/edit">Edit</a>
+
     <form method="post" action="/resumes/{{ resume['id'] }}/rematch">
         <button type="submit">Rematch</button>
     </form>
