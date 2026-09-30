@@ -1,0 +1,67 @@
+:root {
+  --bg: #08090a;
+  --text-primary: #ffffff;
+  --text-secondary: #9a9a9a;
+  --text-muted: #616161;
+  --accent: #feff7c;
+  --text-on-accent: #000000;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.5;
+}
+
+nav {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", monospace;
+  padding: 1rem;
+  border-bottom: 1px solid var(--text-muted);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  margin-bottom: 1rem;
+}
+
+p {
+  margin-bottom: 1rem;
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.btn-accent {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", monospace;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.btn-accent:hover {
+  opacity: 0.9;
+}
+
+.btn-accent:active {
+  opacity: 0.8;
+}
