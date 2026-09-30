@@ -33,5 +33,5 @@ base template). Keep parallel subagent batches to 2 at a time.
 
 - [x] E6-S01 Resume list page (docs/tickets/E6-S01-resume-list-page.md)
 - [x] E6-S02 Register a resume (docs/tickets/E6-S02-register-resume.md)
-- [ ] E6-S03 Resume match list page (docs/tickets/E6-S03-resume-match-list-page.md)
+- [x] E6-S03 Resume match list page (docs/tickets/E6-S03-resume-match-list-page.md)
 - [ ] E6-S04 Trigger a rematch (docs/tickets/E6-S04-trigger-rematch.md)
