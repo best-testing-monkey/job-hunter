@@ -1,7 +1,6 @@
 from webapp.db import (
     get_connection,
     init_db,
-    register_resume,
     list_resumes,
     upsert_match,
     get_matches,
@@ -27,40 +26,6 @@ def test_db_schema(tmp_path):
     conn.close()
 
 
-def test_register_resume_first_call(tmp_path):
-    db_path = tmp_path / "test.db"
-    conn = get_connection(str(db_path))
-    init_db(conn)
-
-    resume_id = register_resume(conn, "My Resume", "/path/to/resume.pdf")
-    assert isinstance(resume_id, int)
-    assert resume_id > 0
-
-    resumes = list_resumes(conn)
-    assert len(resumes) == 1
-    assert resumes[0]["name"] == "My Resume"
-    assert resumes[0]["file_path"] == "/path/to/resume.pdf"
-    assert resumes[0]["id"] == resume_id
-
-    conn.close()
-
-
-def test_register_resume_duplicate_file_path(tmp_path):
-    db_path = tmp_path / "test.db"
-    conn = get_connection(str(db_path))
-    init_db(conn)
-
-    resume_id1 = register_resume(conn, "My Resume", "/path/to/resume.pdf")
-    resume_id2 = register_resume(conn, "Updated Resume Name", "/path/to/resume.pdf")
-
-    assert resume_id1 == resume_id2
-
-    resumes = list_resumes(conn)
-    assert len(resumes) == 1
-
-    conn.close()
-
-
 def test_list_resumes_empty(tmp_path):
     db_path = tmp_path / "test.db"
     conn = get_connection(str(db_path))
@@ -74,12 +39,13 @@ def test_list_resumes_empty(tmp_path):
 
 def test_list_resumes_multiple(tmp_path):
     db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
     conn = get_connection(str(db_path))
     init_db(conn)
 
-    register_resume(conn, "Resume 1", "/path/to/resume1.pdf")
-    register_resume(conn, "Resume 2", "/path/to/resume2.pdf")
-    register_resume(conn, "Resume 3", "/path/to/resume3.pdf")
+    create_resume(conn, str(resumes_dir), "Resume 1", "# Resume 1")
+    create_resume(conn, str(resumes_dir), "Resume 2", "# Resume 2")
+    create_resume(conn, str(resumes_dir), "Resume 3", "# Resume 3")
 
     resumes = list_resumes(conn)
     assert len(resumes) == 3
@@ -89,10 +55,11 @@ def test_list_resumes_multiple(tmp_path):
 
 def test_upsert_match_insert(tmp_path):
     db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
     conn = get_connection(str(db_path))
     init_db(conn)
 
-    resume_id = register_resume(conn, "My Resume", "/path/to/resume.pdf")
+    resume_id = create_resume(conn, str(resumes_dir), "My Resume", "# My Resume")
 
     upsert_match(
         conn,
@@ -117,10 +84,11 @@ def test_upsert_match_insert(tmp_path):
 
 def test_upsert_match_update_on_conflict(tmp_path):
     db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
     conn = get_connection(str(db_path))
     init_db(conn)
 
-    resume_id = register_resume(conn, "My Resume", "/path/to/resume.pdf")
+    resume_id = create_resume(conn, str(resumes_dir), "My Resume", "# My Resume")
 
     upsert_match(
         conn,
@@ -159,10 +127,11 @@ def test_upsert_match_update_on_conflict(tmp_path):
 
 def test_get_matches_empty(tmp_path):
     db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
     conn = get_connection(str(db_path))
     init_db(conn)
 
-    resume_id = register_resume(conn, "My Resume", "/path/to/resume.pdf")
+    resume_id = create_resume(conn, str(resumes_dir), "My Resume", "# My Resume")
 
     matches = get_matches(conn, resume_id)
     assert len(matches) == 0
@@ -172,10 +141,11 @@ def test_get_matches_empty(tmp_path):
 
 def test_get_matches_order_by_score_descending(tmp_path):
     db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
     conn = get_connection(str(db_path))
     init_db(conn)
 
-    resume_id = register_resume(conn, "My Resume", "/path/to/resume.pdf")
+    resume_id = create_resume(conn, str(resumes_dir), "My Resume", "# My Resume")
 
     upsert_match(
         conn,
@@ -225,10 +195,11 @@ def test_get_matches_order_by_score_descending(tmp_path):
 
 def test_get_matches_order_by_title(tmp_path):
     db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
     conn = get_connection(str(db_path))
     init_db(conn)
 
-    resume_id = register_resume(conn, "My Resume", "/path/to/resume.pdf")
+    resume_id = create_resume(conn, str(resumes_dir), "My Resume", "# My Resume")
 
     upsert_match(
         conn,
@@ -265,10 +236,11 @@ def test_get_matches_order_by_title(tmp_path):
 
 def test_get_matches_order_by_site(tmp_path):
     db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
     conn = get_connection(str(db_path))
     init_db(conn)
 
-    resume_id = register_resume(conn, "My Resume", "/path/to/resume.pdf")
+    resume_id = create_resume(conn, str(resumes_dir), "My Resume", "# My Resume")
 
     upsert_match(
         conn,
@@ -305,10 +277,11 @@ def test_get_matches_order_by_site(tmp_path):
 
 def test_get_matches_invalid_order_by_defaults_to_score(tmp_path):
     db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
     conn = get_connection(str(db_path))
     init_db(conn)
 
-    resume_id = register_resume(conn, "My Resume", "/path/to/resume.pdf")
+    resume_id = create_resume(conn, str(resumes_dir), "My Resume", "# My Resume")
 
     upsert_match(
         conn,
@@ -344,16 +317,17 @@ def test_get_matches_invalid_order_by_defaults_to_score(tmp_path):
 
 def test_get_resume_exists(tmp_path):
     db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
     conn = get_connection(str(db_path))
     init_db(conn)
 
-    resume_id = register_resume(conn, "My Resume", "/path/to/resume.pdf")
+    resume_id = create_resume(conn, str(resumes_dir), "My Resume", "# My Resume")
     resume = get_resume(conn, resume_id)
 
     assert resume is not None
     assert resume["id"] == resume_id
     assert resume["name"] == "My Resume"
-    assert resume["file_path"] == "/path/to/resume.pdf"
+    assert resume["file_path"] != ""
 
     conn.close()
 

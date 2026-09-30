@@ -33,11 +33,12 @@ def test_resume_list_empty(tmp_path):
 def test_resume_list_with_one_resume(tmp_path):
     app = create_app()
     app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
     client = app.test_client()
 
     conn = db.get_connection(app.config["DATABASE"])
     db.init_db(conn)
-    db.register_resume(conn, "My Resume", "/path/to/resume.pdf")
+    db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
     conn.close()
 
     response = client.get("/")
@@ -50,24 +51,32 @@ def test_resume_list_with_one_resume(tmp_path):
 def test_register_resume_post(tmp_path):
     app = create_app()
     app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
     client = app.test_client()
 
-    response = client.post("/resumes", data={"name": "Test CV", "file_path": "/some/path.md"})
+    content = "# My Resume\nExperienced developer"
+    response = client.post("/resumes", data={"name": "Test CV", "content": content})
     assert response.status_code == 302
 
     response = client.get("/")
     assert response.status_code == 200
     assert b"Test CV" in response.data
 
+    from pathlib import Path
+    resume_file = Path(app.config["RESUMES_DIR"]) / "1.md"
+    assert resume_file.exists()
+    assert resume_file.read_text() == content
+
 
 def test_resume_detail_with_matches(tmp_path):
     app = create_app()
     app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
     client = app.test_client()
 
     conn = db.get_connection(app.config["DATABASE"])
     db.init_db(conn)
-    resume_id = db.register_resume(conn, "My Resume", "/path/to/resume.pdf")
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
     db.upsert_match(
         conn,
         resume_id=resume_id,
@@ -103,11 +112,12 @@ def test_resume_detail_with_matches(tmp_path):
 def test_resume_detail_with_no_matches(tmp_path):
     app = create_app()
     app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
     client = app.test_client()
 
     conn = db.get_connection(app.config["DATABASE"])
     db.init_db(conn)
-    resume_id = db.register_resume(conn, "My Resume", "/path/to/resume.pdf")
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
     conn.close()
 
     response = client.get(f"/resumes/{resume_id}")
@@ -131,11 +141,12 @@ def test_resume_detail_not_found(tmp_path):
 def test_rematch_resume(tmp_path):
     app = create_app()
     app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
     client = app.test_client()
 
     conn = db.get_connection(app.config["DATABASE"])
     db.init_db(conn)
-    resume_id = db.register_resume(conn, "My Resume", "/path/to/resume.pdf")
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
     conn.close()
 
     mock_results = [

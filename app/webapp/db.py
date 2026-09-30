@@ -42,24 +42,6 @@ def init_db(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
-def register_resume(conn: sqlite3.Connection, name: str, file_path: str) -> int:
-    try:
-        created_at = datetime.now(timezone.utc).isoformat()
-        cursor = conn.execute(
-            "INSERT INTO resumes (name, file_path, created_at) VALUES (?, ?, ?)",
-            (name, file_path, created_at),
-        )
-        conn.commit()
-        return cursor.lastrowid
-    except sqlite3.IntegrityError:
-        cursor = conn.execute(
-            "SELECT id FROM resumes WHERE file_path = ?",
-            (file_path,),
-        )
-        row = cursor.fetchone()
-        return row[0]
-
-
 def get_resume(conn: sqlite3.Connection, resume_id: int) -> sqlite3.Row | None:
     cursor = conn.execute("SELECT * FROM resumes WHERE id = ?", (resume_id,))
     return cursor.fetchone()

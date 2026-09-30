@@ -89,7 +89,7 @@ def rematch_resume(resume_id):
 @bp.route("/resumes", methods=["POST"])
 def register_resume_route():
     name = request.form["name"]
-    file_path = request.form["file_path"]
+    content = request.form["content"]
     conn = get_db()
-    db.register_resume(conn, name, file_path)
+    db.create_resume(conn, current_app.config["RESUMES_DIR"], name, content)
     return redirect(url_for("main.resume_list"))
