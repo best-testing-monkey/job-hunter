@@ -45,5 +45,5 @@ but there's nothing else pending right now).
 
 - [x] E7-S01 Add content column and resume CRUD db functions (docs/tickets/E7-S01-resume-crud-db-functions.md)
 - [x] E7-S02 Switch resume creation to content-based, remove register_resume (docs/tickets/E7-S02-content-based-create.md)
-- [ ] E7-S03 Edit a resume (docs/tickets/E7-S03-edit-resume.md)
+- [x] E7-S03 Edit a resume (docs/tickets/E7-S03-edit-resume.md)
 - [ ] E7-S04 Delete a resume (docs/tickets/E7-S04-delete-resume.md)
