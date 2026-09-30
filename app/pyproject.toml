@@ -1,0 +1,20 @@
+[project]
+name = "job-hunter-app"
+version = "0.1.0"
+description = "Job hunter web application"
+requires-python = ">=3.10"
+dependencies = [
+    "flask",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["webapp"]
