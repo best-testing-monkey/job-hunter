@@ -35,3 +35,15 @@ base template). Keep parallel subagent batches to 2 at a time.
 - [x] E6-S02 Register a resume (docs/tickets/E6-S02-register-resume.md)
 - [x] E6-S03 Resume match list page (docs/tickets/E6-S03-resume-match-list-page.md)
 - [x] E6-S04 Trigger a rematch (docs/tickets/E6-S04-trigger-rematch.md)
+
+## Epic 7 — Resume CRUD
+
+All four stories touch `app/webapp/routes.py` and/or the same templates —
+run sequentially, not in parallel (E7-S01 is the exception: it only touches
+`db.py`/`__init__.py`, so it could in principle pair with something else,
+but there's nothing else pending right now).
+
+- [ ] E7-S01 Add content column and resume CRUD db functions (docs/tickets/E7-S01-resume-crud-db-functions.md)
+- [ ] E7-S02 Switch resume creation to content-based, remove register_resume (docs/tickets/E7-S02-content-based-create.md)
+- [ ] E7-S03 Edit a resume (docs/tickets/E7-S03-edit-resume.md)
+- [ ] E7-S04 Delete a resume (docs/tickets/E7-S04-delete-resume.md)
