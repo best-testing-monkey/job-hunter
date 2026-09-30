@@ -1,0 +1,22 @@
+# Sibling projects — each is its own git repo with its own remote.
+# Not yet converted to git submodules (pending decision); excluded here so
+# their nested .git directories and uncommitted work aren't touched by
+# this repo's git operations.
+/scraper/
+/resume-matcher/
+
+# Claude Code local session/config data — not shared project state.
+/.claude/
+
+# Python
+__pycache__/
+*.py[codz]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# App-local generated data
+/app/*.db
+/app/instance/
