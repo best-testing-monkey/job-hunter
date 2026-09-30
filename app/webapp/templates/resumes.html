@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main>
+    <h1>Resumes</h1>
+    {% if resumes %}
+        <ul>
+            {% for resume in resumes %}
+                <li>{{ resume['name'] }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No resumes registered yet</p>
+    {% endif %}
+</main>
+{% endblock %}
