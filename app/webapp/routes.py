@@ -1,5 +1,7 @@
+import threading
+from datetime import datetime, timezone
 from flask import Blueprint, jsonify, render_template, g, current_app, request, redirect, url_for, abort
-from webapp import db
+from webapp import db, matcher, jobs
 
 bp = Blueprint("main", __name__)
 
@@ -43,6 +45,45 @@ def resume_detail(resume_id):
         abort(404)
     matches = db.get_matches(conn, resume_id)
     return render_template("resume_detail.html", resume=resume, matches=matches)
+
+
+def _run_rematch(resume_id: int, resume_file_path: str, db_path: str) -> None:
+    results = matcher.run_embed_match(resume_file_path)
+    conn = db.get_connection(db_path)
+    for result in results:
+        job_file = result["job_file"]
+        score = result["score"]
+        job_info = jobs.parse_job_file(job_file)
+        site = jobs.site_name_for(job_file)
+        computed_at = datetime.now(timezone.utc).isoformat()
+        db.upsert_match(
+            conn,
+            resume_id=resume_id,
+            job_file=job_file,
+            title=job_info.get("title"),
+            site=site,
+            location=job_info.get("location"),
+            workplace=job_info.get("workplace"),
+            source_url=job_info.get("source_url"),
+            score=score,
+            computed_at=computed_at,
+        )
+    conn.close()
+
+
+@bp.route("/resumes/<int:resume_id>/rematch", methods=["POST"])
+def rematch_resume(resume_id):
+    conn = get_db()
+    resume = db.get_resume(conn, resume_id)
+    if resume is None:
+        abort(404)
+    thread = threading.Thread(
+        target=_run_rematch,
+        args=(resume_id, resume["file_path"], current_app.config["DATABASE"]),
+        daemon=True,
+    )
+    thread.start()
+    return redirect(url_for("main.resume_detail", resume_id=resume_id))
 
 
 @bp.route("/resumes", methods=["POST"])

@@ -5,6 +5,10 @@
     <h1>{{ resume['name'] }}</h1>
     <p>File: {{ resume['file_path'] }}</p>
 
+    <form method="post" action="/resumes/{{ resume['id'] }}/rematch">
+        <button type="submit">Rematch</button>
+    </form>
+
     <h2>Matches</h2>
     {% if matches %}
         <table>
