@@ -10,7 +10,7 @@ base template). Keep parallel subagent batches to 2 at a time.
 
 ## Epic 1 — Scaffolding
 
-- [ ] E1-S01 Scaffold the Flask app project (docs/tickets/E1-S01-scaffold-flask-app.md)
+- [x] E1-S01 Scaffold the Flask app project (docs/tickets/E1-S01-scaffold-flask-app.md)
 
 ## Epic 2 — Visual shell
 
