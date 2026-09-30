@@ -5,6 +5,11 @@ from datetime import datetime, timezone
 def get_connection(db_path: str) -> sqlite3.Connection:
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
+    # A rematch writes from a background thread while the request thread (or
+    # a page reload) may hold a read connection open on the same file —
+    # without this, SQLite raises "database is locked" immediately instead
+    # of waiting, which silently truncates an in-progress rematch's writes.
+    conn.execute("PRAGMA busy_timeout = 5000")
     return conn
 
 
