@@ -23,11 +23,11 @@ base template). Keep parallel subagent batches to 2 at a time.
 
 ## Epic 4 — Job metadata reuse
 
-- [ ] E4-S01 Job metadata wrapper reusing build_report.py (docs/tickets/E4-S01-job-metadata-wrapper.md)
+- [x] E4-S01 Job metadata wrapper reusing build_report.py (docs/tickets/E4-S01-job-metadata-wrapper.md)
 
 ## Epic 5 — Matching engine
 
-- [ ] E5-S01 Matcher subprocess wrapper (docs/tickets/E5-S01-matcher-subprocess-wrapper.md)
+- [x] E5-S01 Matcher subprocess wrapper (docs/tickets/E5-S01-matcher-subprocess-wrapper.md)
 
 ## Epic 6 — Routes
 
