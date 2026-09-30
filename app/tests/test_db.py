@@ -1,4 +1,4 @@
-from webapp.db import get_connection, init_db, register_resume, list_resumes, upsert_match, get_matches
+from webapp.db import get_connection, init_db, register_resume, list_resumes, upsert_match, get_matches, get_resume
 
 
 def test_db_schema(tmp_path):
@@ -327,5 +327,33 @@ def test_get_matches_invalid_order_by_defaults_to_score(tmp_path):
     matches = get_matches(conn, resume_id, order_by="invalid_column")
     assert len(matches) == 2
     assert matches[0]["score"] == 0.95
+
+    conn.close()
+
+
+def test_get_resume_exists(tmp_path):
+    db_path = tmp_path / "test.db"
+    conn = get_connection(str(db_path))
+    init_db(conn)
+
+    resume_id = register_resume(conn, "My Resume", "/path/to/resume.pdf")
+    resume = get_resume(conn, resume_id)
+
+    assert resume is not None
+    assert resume["id"] == resume_id
+    assert resume["name"] == "My Resume"
+    assert resume["file_path"] == "/path/to/resume.pdf"
+
+    conn.close()
+
+
+def test_get_resume_not_found(tmp_path):
+    db_path = tmp_path / "test.db"
+    conn = get_connection(str(db_path))
+    init_db(conn)
+
+    resume = get_resume(conn, 999999)
+
+    assert resume is None
 
     conn.close()

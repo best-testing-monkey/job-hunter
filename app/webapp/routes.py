@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, render_template, g, current_app, request, redirect, url_for
+from flask import Blueprint, jsonify, render_template, g, current_app, request, redirect, url_for, abort
 from webapp import db
 
 bp = Blueprint("main", __name__)
@@ -33,6 +33,16 @@ def resume_list():
     conn = get_db()
     resumes = db.list_resumes(conn)
     return render_template("resumes.html", resumes=resumes)
+
+
+@bp.route("/resumes/<int:resume_id>", methods=["GET"])
+def resume_detail(resume_id):
+    conn = get_db()
+    resume = db.get_resume(conn, resume_id)
+    if resume is None:
+        abort(404)
+    matches = db.get_matches(conn, resume_id)
+    return render_template("resume_detail.html", resume=resume, matches=matches)
 
 
 @bp.route("/resumes", methods=["POST"])

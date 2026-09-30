@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main>
+    <h1>{{ resume['name'] }}</h1>
+    <p>File: {{ resume['file_path'] }}</p>
+
+    <h2>Matches</h2>
+    {% if matches %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Score</th>
+                    <th>Job Title</th>
+                    <th>Site</th>
+                    <th>Workplace</th>
+                    <th>Location</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for match in matches %}
+                <tr>
+                    <td>{{ match['score'] }}</td>
+                    <td>
+                        {% if match['source_url'] %}
+                            <a href="{{ match['source_url'] }}">{{ match['title'] }}</a>
+                        {% else %}
+                            {{ match['title'] }}
+                        {% endif %}
+                    </td>
+                    <td>{{ match['site'] }}</td>
+                    <td>{{ match['workplace'] or 'N/A' }}</td>
+                    <td>{{ match['location'] or 'N/A' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No matches yet — run a rematch</p>
+    {% endif %}
+</main>
+{% endblock %}

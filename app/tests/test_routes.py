@@ -57,3 +57,71 @@ def test_register_resume_post(tmp_path):
     response = client.get("/")
     assert response.status_code == 200
     assert b"Test CV" in response.data
+
+
+def test_resume_detail_with_matches(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    client = app.test_client()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.register_resume(conn, "My Resume", "/path/to/resume.pdf")
+    db.upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file="job1.txt",
+        title="Software Engineer",
+        site="TechCorp",
+        location="San Francisco",
+        workplace="remote",
+        source_url="https://example.com/job1",
+        score=0.95,
+        computed_at="2024-01-01T00:00:00",
+    )
+    db.upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file="job2.txt",
+        title="Senior Engineer",
+        site="TechCorp",
+        location="New York",
+        workplace="hybrid",
+        source_url="https://example.com/job2",
+        score=0.85,
+        computed_at="2024-01-01T00:00:00",
+    )
+    conn.close()
+
+    response = client.get(f"/resumes/{resume_id}")
+    assert response.status_code == 200
+    assert b"Software Engineer" in response.data
+    assert b"Senior Engineer" in response.data
+
+
+def test_resume_detail_with_no_matches(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    client = app.test_client()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.register_resume(conn, "My Resume", "/path/to/resume.pdf")
+    conn.close()
+
+    response = client.get(f"/resumes/{resume_id}")
+    assert response.status_code == 200
+    assert "No matches yet — run a rematch" in response.get_data(as_text=True)
+
+
+def test_resume_detail_not_found(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    client = app.test_client()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    conn.close()
+
+    response = client.get("/resumes/999999")
+    assert response.status_code == 404

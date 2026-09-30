@@ -53,6 +53,11 @@ def register_resume(conn: sqlite3.Connection, name: str, file_path: str) -> int:
         return row[0]
 
 
+def get_resume(conn: sqlite3.Connection, resume_id: int) -> sqlite3.Row | None:
+    cursor = conn.execute("SELECT * FROM resumes WHERE id = ?", (resume_id,))
+    return cursor.fetchone()
+
+
 def list_resumes(conn: sqlite3.Connection) -> list[sqlite3.Row]:
     cursor = conn.execute("SELECT * FROM resumes")
     return cursor.fetchall()
