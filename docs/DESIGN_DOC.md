@@ -53,6 +53,7 @@ and is out of scope for this build.
   name+file path) — deferred to a later slice. This phase's minimal seam:
   a resume is "registered" with a name and a path to an existing markdown
   file (e.g. `resume-matcher/resumes/cv_1000.md`); no resume content editing.
+  **Now in scope — see "Resume CRUD (second slice)" below.**
 - **Transferable-skills curation/tagging** — deferred to a later slice.
 - **Multi-user / auth** — single-user local tool.
 - **Converting `scraper`/`resume-matcher` into git submodules** — separate
@@ -142,6 +143,81 @@ rows and the `score`/`computed_at` simply reflect the latest run.
 | POST | `/resumes` | Register a resume (name + file path only — not full CRUD) |
 | GET | `/resumes/<id>` | One resume's match list: sortable by score, filterable by site/workplace, paginated |
 | POST | `/resumes/<id>/rematch` | Trigger a fresh embed-mode match run (background thread) |
+
+## Resume CRUD (second slice)
+
+The first slice's "register a resume" is create-only and points at a file
+the user must already have on disk somewhere else — not real CRUD. This
+slice makes the app **own** resume content: create, edit, and delete a
+resume's actual text from inside the tool, instead of just pointing at an
+external path.
+
+### What doesn't change
+
+The matching flow (`matcher.run_embed_match`, `_run_rematch`, the whole
+`POST /resumes/<id>/rematch` route from the first slice) is untouched.
+`job_matcher.py` still needs a real file path to read, so `resumes.file_path`
+stays in the schema and stays the thing the matcher subprocess is pointed
+at — it just becomes **app-managed** instead of user-typed: the app writes
+it under `app/instance/resumes/<id>.md` whenever content is created or
+edited, and removes it on delete.
+
+### Data model change
+
+Add one column to the existing `resumes` table (additive — no existing
+persisted rows to migrate, this app has no real users yet):
+
+```sql
+ALTER TABLE resumes ADD COLUMN content TEXT;
+```
+
+(`content` is the resume's markdown text, edited in the app. `file_path`
+remains `NOT NULL UNIQUE`, computed by the app as
+`<instance_path>/resumes/<id>.md` — never user-supplied going forward.)
+
+### `db.py` changes
+
+- `create_resume(conn, resumes_dir: str, name: str, content: str) -> int` —
+  replaces `register_resume` (remove it; update its one call site in
+  `routes.py` — don't leave both functions around). Inserts the row first
+  (empty `file_path` placeholder) to get an autoincrement `id`, computes
+  `Path(resumes_dir) / f"{id}.md"`, writes `content` to it, then `UPDATE`s
+  the row's `file_path` to that path. Returns the `id`.
+- `update_resume(conn, resume_id: int, name: str, content: str) -> None` —
+  updates `name`/`content` in the DB, then rewrites the existing
+  `file_path`'s file with the new `content` (the path itself doesn't
+  change).
+- `delete_resume(conn, resume_id: int) -> None` — deletes all rows in
+  `matches` for this `resume_id`, deletes the `resumes` row, then removes
+  the resume's file at its `file_path` (`Path(file_path).unlink(missing_ok=True)`
+  — the file might already be gone; that's fine, not an error).
+
+`resumes_dir` is a new Flask config value, `app.config["RESUMES_DIR"]`, set
+in `create_app()` alongside the existing `DATABASE` config —
+`os.path.join(app.instance_path, "resumes")`, created via
+`os.makedirs(..., exist_ok=True)` the same way the instance folder already
+is.
+
+### Routes
+
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/resumes` | **Changed**: now takes `name` + `content` (a textarea), not `file_path`. Calls `create_resume`. |
+| GET | `/resumes/<id>/edit` | New — a form pre-filled with the resume's current `name`/`content`. |
+| POST | `/resumes/<id>/edit` | New — calls `update_resume`, redirects to `/resumes/<id>`. |
+| POST | `/resumes/<id>/delete` | New — calls `delete_resume`, redirects to `/`. Destructive — the delete button/form should have a client-side `confirm()` before submitting. |
+
+### Verification
+
+- `uv run pytest tests/ -q` — extend `test_db.py` for `create_resume`
+  (writes a real file, sets `file_path` correctly), `update_resume`
+  (rewrites content, same `file_path`), `delete_resume` (removes matches +
+  resume row + file, tolerates an already-missing file).
+- Manual: create a resume with real content through the UI, confirm the
+  file exists on disk at the expected path with matching content; edit it
+  and confirm the file's content changed; trigger a rematch and confirm it
+  still works unmodified; delete it and confirm the file, DB row, and any
+  matches are gone.
 
 ## Visual design tokens
 
