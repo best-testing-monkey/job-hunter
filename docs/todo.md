@@ -18,7 +18,7 @@ base template). Keep parallel subagent batches to 2 at a time.
 
 ## Epic 3 — Data layer
 
-- [ ] E3-S01 SQLite schema and connection helper (docs/tickets/E3-S01-sqlite-schema.md)
+- [x] E3-S01 SQLite schema and connection helper (docs/tickets/E3-S01-sqlite-schema.md)
 - [ ] E3-S02 Resume registration and match upsert queries (docs/tickets/E3-S02-resume-and-match-queries.md)
 
 ## Epic 4 — Job metadata reuse
