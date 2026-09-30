@@ -149,14 +149,14 @@ def test_rematch_resume(tmp_path):
                 "title": "Software Engineer",
                 "location": "San Francisco",
                 "workplace": "remote",
-                "source_url": "https://example.com/job1",
+                "source": "https://example.com/job1",
             }
         else:
             return {
                 "title": "Senior Engineer",
                 "location": "New York",
                 "workplace": "hybrid",
-                "source_url": "https://example.com/job2",
+                "source": "https://example.com/job2",
             }
 
     def mock_site_name_for(job_file):
