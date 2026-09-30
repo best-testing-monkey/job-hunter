@@ -44,3 +44,16 @@ def test_resume_list_with_one_resume(tmp_path):
     assert b"Resumes" in response.data
     assert b"My Resume" in response.data
     assert b"No resumes registered yet" not in response.data
+
+
+def test_register_resume_post(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    client = app.test_client()
+
+    response = client.post("/resumes", data={"name": "Test CV", "file_path": "/some/path.md"})
+    assert response.status_code == 302
+
+    response = client.get("/")
+    assert response.status_code == 200
+    assert b"Test CV" in response.data

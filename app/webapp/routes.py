@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, render_template, g, current_app
+from flask import Blueprint, jsonify, render_template, g, current_app, request, redirect, url_for
 from webapp import db
 
 bp = Blueprint("main", __name__)
@@ -33,3 +33,12 @@ def resume_list():
     conn = get_db()
     resumes = db.list_resumes(conn)
     return render_template("resumes.html", resumes=resumes)
+
+
+@bp.route("/resumes", methods=["POST"])
+def register_resume_route():
+    name = request.form["name"]
+    file_path = request.form["file_path"]
+    conn = get_db()
+    db.register_resume(conn, name, file_path)
+    return redirect(url_for("main.resume_list"))

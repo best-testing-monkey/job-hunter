@@ -12,5 +12,18 @@
     {% else %}
         <p>No resumes registered yet</p>
     {% endif %}
+
+    <h2>Register a new resume</h2>
+    <form method="post" action="/resumes">
+        <div>
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        <div>
+            <label for="file_path">File path:</label>
+            <input type="text" id="file_path" name="file_path" required>
+        </div>
+        <button type="submit">Register</button>
+    </form>
 </main>
 {% endblock %}
