@@ -11,6 +11,10 @@
         <button type="submit">Rematch</button>
     </form>
 
+    <form method="post" action="/resumes/{{ resume['id'] }}/delete" onsubmit="return confirm('Delete this resume and all its matches?')">
+        <button type="submit">Delete</button>
+    </form>
+
     <h2>Matches</h2>
     {% if matches %}
         <table>

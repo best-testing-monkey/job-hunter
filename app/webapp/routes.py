@@ -107,6 +107,16 @@ def edit_resume_post(resume_id):
     return redirect(url_for("main.resume_detail", resume_id=resume_id))
 
 
+@bp.route("/resumes/<int:resume_id>/delete", methods=["POST"])
+def delete_resume(resume_id):
+    conn = get_db()
+    resume = db.get_resume(conn, resume_id)
+    if resume is None:
+        abort(404)
+    db.delete_resume(conn, resume_id)
+    return redirect(url_for("main.resume_list"))
+
+
 @bp.route("/resumes", methods=["POST"])
 def register_resume_route():
     name = request.form["name"]

@@ -273,3 +273,60 @@ def test_edit_resume_post_not_found(tmp_path):
 
     response = client.post("/resumes/999999/edit", data={"name": "Test", "content": "Test"})
     assert response.status_code == 404
+
+
+def test_delete_resume_with_matches(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
+    db.upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file="job1.txt",
+        title="Software Engineer",
+        site="TechCorp",
+        location="San Francisco",
+        workplace="remote",
+        source_url="https://example.com/job1",
+        score=0.95,
+        computed_at="2024-01-01T00:00:00",
+    )
+    resume = db.get_resume(conn, resume_id)
+    file_path = resume["file_path"]
+    conn.close()
+
+    from pathlib import Path
+    assert Path(file_path).exists()
+
+    response = client.post(f"/resumes/{resume_id}/delete")
+    assert response.status_code == 302
+    assert response.location.endswith("/")
+
+    response = client.get(f"/resumes/{resume_id}")
+    assert response.status_code == 404
+
+    conn = db.get_connection(app.config["DATABASE"])
+    matches = db.get_matches(conn, resume_id)
+    conn.close()
+
+    assert len(matches) == 0
+
+    assert not Path(file_path).exists()
+
+
+def test_delete_resume_not_found(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    client = app.test_client()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    conn.close()
+
+    response = client.post("/resumes/999999/delete")
+    assert response.status_code == 404
