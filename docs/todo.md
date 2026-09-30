@@ -14,7 +14,7 @@ base template). Keep parallel subagent batches to 2 at a time.
 
 ## Epic 2 — Visual shell
 
-- [ ] E2-S01 Dark-only base template and stylesheet (docs/tickets/E2-S01-base-template-and-theme.md)
+- [x] E2-S01 Dark-only base template and stylesheet (docs/tickets/E2-S01-base-template-and-theme.md)
 
 ## Epic 3 — Data layer
 
