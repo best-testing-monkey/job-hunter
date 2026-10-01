@@ -136,6 +136,9 @@ def test_resume_detail_not_found(tmp_path):
 
     response = client.get("/resumes/999999")
     assert response.status_code == 404
+    assert b"404" in response.data
+    assert b"Not Found" in response.data
+    assert b"job-hunter" in response.data
 
 
 def test_rematch_resume(tmp_path):
