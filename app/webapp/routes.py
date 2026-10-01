@@ -129,6 +129,14 @@ def edit_resume_post(resume_id):
         abort(404)
     name = request.form["name"]
     content = request.form["content"]
+    if not name.strip() or not content.strip():
+        return render_template(
+            "resume_edit.html",
+            resume=resume,
+            name=name,
+            content=content,
+            error="Resume name and content cannot be blank or whitespace only.",
+        )
     db.update_resume(conn, resume_id, name, content)
     return redirect(url_for("main.resume_detail", resume_id=resume_id))
 
@@ -182,6 +190,13 @@ def job_detail(match_id):
 def register_resume_route():
     name = request.form["name"]
     content = request.form["content"]
+    if not name.strip() or not content.strip():
+        return render_template(
+            "resume_new.html",
+            name=name,
+            content=content,
+            error="Resume name and content cannot be blank or whitespace only.",
+        )
     conn = get_db()
-    db.create_resume(conn, current_app.config["RESUMES_DIR"], name, content)
-    return redirect(url_for("main.resume_list"))
+    resume_id = db.create_resume(conn, current_app.config["RESUMES_DIR"], name, content)
+    return redirect(url_for("main.resume_detail", resume_id=resume_id))

@@ -63,6 +63,7 @@ def test_register_resume_post(tmp_path):
     content = "# My Resume\nExperienced developer"
     response = client.post("/resumes", data={"name": "Test CV", "content": content})
     assert response.status_code == 302
+    assert response.location.endswith("/resumes/1")
 
     response = client.get("/")
     assert response.status_code == 200
@@ -72,6 +73,93 @@ def test_register_resume_post(tmp_path):
     resume_file = Path(app.config["RESUMES_DIR"]) / "1.md"
     assert resume_file.exists()
     assert resume_file.read_text() == content
+
+
+def test_register_resume_post_blank_name(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    content = "# My Resume\nExperienced developer"
+    response = client.post("/resumes", data={"name": "", "content": content})
+    assert response.status_code == 200
+    assert b"error" in response.data.lower()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resumes = db.list_resumes(conn)
+    conn.close()
+
+    assert len(resumes) == 0
+
+
+def test_register_resume_post_whitespace_name(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    content = "# My Resume\nExperienced developer"
+    response = client.post("/resumes", data={"name": "   ", "content": content})
+    assert response.status_code == 200
+    assert b"error" in response.data.lower()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resumes = db.list_resumes(conn)
+    conn.close()
+
+    assert len(resumes) == 0
+
+
+def test_register_resume_post_blank_content(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    response = client.post("/resumes", data={"name": "Test CV", "content": ""})
+    assert response.status_code == 200
+    assert b"error" in response.data.lower()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resumes = db.list_resumes(conn)
+    conn.close()
+
+    assert len(resumes) == 0
+
+
+def test_register_resume_post_whitespace_content(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    response = client.post("/resumes", data={"name": "Test CV", "content": "   \n  \t  "})
+    assert response.status_code == 200
+    assert b"error" in response.data.lower()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resumes = db.list_resumes(conn)
+    conn.close()
+
+    assert len(resumes) == 0
+
+
+def test_register_resume_post_blank_name_preserves_content(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    content = "# My Resume\nExperienced developer"
+    response = client.post("/resumes", data={"name": "", "content": content})
+    assert response.status_code == 200
+    response_text = response.get_data(as_text=True)
+    assert content in response_text
 
 
 def test_resume_detail_with_matches(tmp_path):
@@ -282,6 +370,104 @@ def test_edit_resume_post_not_found(tmp_path):
 
     response = client.post("/resumes/999999/edit", data={"name": "Test", "content": "Test"})
     assert response.status_code == 404
+
+
+def test_edit_resume_post_blank_name(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
+    conn.close()
+
+    original_name = "My Resume"
+    new_name = ""
+    new_content = "# Updated Resume\nSenior developer"
+
+    response = client.post(f"/resumes/{resume_id}/edit", data={"name": new_name, "content": new_content})
+    assert response.status_code == 200
+    assert b"error" in response.data.lower()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    resume = db.get_resume(conn, resume_id)
+    conn.close()
+
+    assert resume["name"] == original_name
+
+
+def test_edit_resume_post_whitespace_name(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
+    conn.close()
+
+    original_name = "My Resume"
+    new_name = "   "
+    new_content = "# Updated Resume\nSenior developer"
+
+    response = client.post(f"/resumes/{resume_id}/edit", data={"name": new_name, "content": new_content})
+    assert response.status_code == 200
+    assert b"error" in response.data.lower()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    resume = db.get_resume(conn, resume_id)
+    conn.close()
+
+    assert resume["name"] == original_name
+
+
+def test_edit_resume_post_blank_content(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
+    conn.close()
+
+    original_content = "# My Resume"
+    new_name = "Updated Resume"
+    new_content = ""
+
+    response = client.post(f"/resumes/{resume_id}/edit", data={"name": new_name, "content": new_content})
+    assert response.status_code == 200
+    assert b"error" in response.data.lower()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    resume = db.get_resume(conn, resume_id)
+    conn.close()
+
+    assert resume["content"] == original_content
+
+
+def test_edit_resume_post_blank_name_preserves_submitted_values(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
+    conn.close()
+
+    new_name = ""
+    new_content = "# Updated Resume\nSenior developer"
+
+    response = client.post(f"/resumes/{resume_id}/edit", data={"name": new_name, "content": new_content})
+    assert response.status_code == 200
+    response_text = response.get_data(as_text=True)
+    assert new_content in response_text
 
 
 def test_delete_resume_with_matches(tmp_path):

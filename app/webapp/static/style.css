@@ -89,3 +89,7 @@ th[data-sort-key] {
   cursor: pointer;
   user-select: none;
 }
+
+.error {
+  color: #e34948;
+}

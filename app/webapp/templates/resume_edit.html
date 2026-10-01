@@ -3,14 +3,15 @@
 {% block content %}
 <main>
     <h1>Edit Resume</h1>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
     <form method="post" action="/resumes/{{ resume['id'] }}/edit">
         <div>
             <label for="name">Name:</label>
-            <input type="text" id="name" name="name" value="{{ resume['name'] }}" required>
+            <input type="text" id="name" name="name" value="{{ name if name is defined else resume['name'] }}" required>
         </div>
         <div>
             <label for="content">Content:</label>
-            <textarea id="content" name="content" required>{{ resume['content'] }}</textarea>
+            <textarea id="content" name="content" required>{{ content if content is defined else resume['content'] }}</textarea>
         </div>
         <button type="submit">Save</button>
     </form>
