@@ -37,6 +37,11 @@ def resume_list():
     return render_template("resumes.html", resumes=resumes)
 
 
+@bp.route("/resumes/new", methods=["GET"])
+def new_resume():
+    return render_template("resume_new.html")
+
+
 @bp.route("/resumes/<int:resume_id>", methods=["GET"])
 def resume_detail(resume_id):
     conn = get_db()

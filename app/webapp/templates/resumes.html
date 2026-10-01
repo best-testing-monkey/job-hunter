@@ -3,27 +3,15 @@
 {% block content %}
 <main>
     <h1>Resumes</h1>
+    <p><a href="/resumes/new" class="btn-accent">+ New Resume</a></p>
     {% if resumes %}
         <ul>
             {% for resume in resumes %}
-                <li>{{ resume['name'] }}</li>
+                <li><a href="/resumes/{{ resume['id'] }}">{{ resume['name'] }}</a></li>
             {% endfor %}
         </ul>
     {% else %}
         <p>No resumes registered yet</p>
     {% endif %}
-
-    <h2>Register a new resume</h2>
-    <form method="post" action="/resumes">
-        <div>
-            <label for="name">Name:</label>
-            <input type="text" id="name" name="name" required>
-        </div>
-        <div>
-            <label for="content">Content:</label>
-            <textarea id="content" name="content" required></textarea>
-        </div>
-        <button type="submit">Register</button>
-    </form>
 </main>
 {% endblock %}
