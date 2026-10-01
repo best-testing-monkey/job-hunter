@@ -63,7 +63,7 @@ parallel with E8-S01. E9-S02 depends on both E8-S01/E8-S02 and E9-S01, and
 touches `routes.py` — sequential after those.
 
 - [x] E9-S01 Add app.js foundation (threshold slider, table sort, rematch polling) (docs/tickets/E9-S01-app-js-foundation.md)
-- [ ] E9-S02 Rebuild homepage as a sortable dashboard with threshold filtering (docs/tickets/E9-S02-homepage-dashboard.md)
+- [x] E9-S02 Rebuild homepage as a sortable dashboard with threshold filtering (docs/tickets/E9-S02-homepage-dashboard.md)
 
 ## Epic 10 — Resume detail page redesign
 
