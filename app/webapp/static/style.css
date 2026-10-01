@@ -93,3 +93,60 @@ th[data-sort-key] {
 .error {
   color: #e34948;
 }
+
+input[type="text"],
+textarea {
+  background: var(--bg);
+  color: var(--text-primary);
+  border: 1px solid var(--text-muted);
+  padding: 0.75rem;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 1rem;
+  border-radius: 4px;
+  width: 100%;
+}
+
+input[type="text"]:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(254, 255, 124, 0.1);
+}
+
+textarea {
+  min-height: 20rem;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", monospace;
+  resize: vertical;
+}
+
+label {
+  display: block;
+  color: var(--text-primary);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+form div {
+  margin-bottom: 1.5rem;
+}
+
+button {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", monospace;
+  font-size: 0.95rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+button:active {
+  opacity: 0.8;
+}
