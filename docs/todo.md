@@ -54,7 +54,7 @@ Sequential (both touch `db.py`; E8-S02 also touches `routes.py`). Can start
 in parallel with Epic 9's first story (disjoint files).
 
 - [x] E8-S01 Add match status, job_posted column, and match lookup functions (docs/tickets/E8-S01-match-status-and-posted-date.md)
-- [ ] E8-S02 Track rematch-running state and expose a status endpoint (docs/tickets/E8-S02-rematch-running-state.md)
+- [x] E8-S02 Track rematch-running state and expose a status endpoint (docs/tickets/E8-S02-rematch-running-state.md)
 
 ## Epic 9 — Homepage dashboard
 
