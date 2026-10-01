@@ -79,7 +79,7 @@ Epic 8/9 work. E10-S02 depends on E8-S01, E9-S01, and E10-S01, and touches
 Depends on E8-S01, touches `routes.py` — sequential relative to the other
 `routes.py`-touching stories above.
 
-- [ ] E11-S01 Add job detail page (docs/tickets/E11-S01-job-detail-page.md)
+- [x] E11-S01 Add job detail page (docs/tickets/E11-S01-job-detail-page.md)
 
 ## Epic 12 — Remaining usability QA fixes
 
