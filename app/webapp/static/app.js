@@ -34,6 +34,12 @@ function makeSortable(tableEl) {
       const tbody = tableEl.querySelector("tbody");
       const rows = Array.from(tbody.querySelectorAll("tr"));
 
+      // Index of this header among its siblings — used to find the matching
+      // <td> in each row by position, since a row can have several
+      // data-sort-value cells (one per sortable column) and querySelector
+      // alone can't tell them apart.
+      const columnIndex = Array.from(header.parentElement.children).indexOf(header);
+
       // Cache the original order on first sort
       if (originalOrder === null) {
         originalOrder = rows.slice();
@@ -71,8 +77,8 @@ function makeSortable(tableEl) {
         // Sort the rows
         const sortedRows = rows.slice();
         sortedRows.sort((rowA, rowB) => {
-          const cellA = rowA.querySelector(`td[data-sort-value]`);
-          const cellB = rowB.querySelector(`td[data-sort-value]`);
+          const cellA = rowA.children[columnIndex];
+          const cellB = rowB.children[columnIndex];
 
           if (!cellA || !cellB) return 0;
 
