@@ -87,6 +87,6 @@ E12-S01 and E12-S02 are sequential (same templates). E12-S03 only touches
 `__init__.py` and a new template — can run in parallel with anything that
 doesn't also touch `__init__.py` (nothing else in this batch does).
 
-- [ ] E12-S01 Reject blank/whitespace resume name or content; create redirects to the new resume (docs/tickets/E12-S01-resume-form-validation.md)
+- [x] E12-S01 Reject blank/whitespace resume name or content; create redirects to the new resume (docs/tickets/E12-S01-resume-form-validation.md)
 - [ ] E12-S02 Style the New/Edit resume forms and size the content textarea (docs/tickets/E12-S02-style-resume-forms.md)
 - [x] E12-S03 Add a dark-themed 404 error page (docs/tickets/E12-S03-styled-404-page.md)
