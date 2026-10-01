@@ -143,6 +143,20 @@ def delete_resume(resume_id):
     return redirect(url_for("main.resume_list"))
 
 
+@bp.route("/matches/<int:match_id>/status", methods=["POST"])
+def update_match_status_route(match_id):
+    conn = get_db()
+    match = db.get_match(conn, match_id)
+    if match is None:
+        abort(404)
+    status = request.form["status"]
+    try:
+        db.update_match_status(conn, match_id, status)
+    except ValueError:
+        abort(400)
+    return redirect(url_for("main.resume_detail", resume_id=match["resume_id"]))
+
+
 @bp.route("/resumes", methods=["POST"])
 def register_resume_route():
     name = request.form["name"]

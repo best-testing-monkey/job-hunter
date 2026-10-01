@@ -33,31 +33,43 @@
     </form>
 
     <h2>Matches</h2>
+
     {% if matches %}
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+            <label for="threshold-slider" style="color: var(--text-secondary);">Threshold:</label>
+            <input type="range" min="0" max="100" value="65" id="threshold-slider" style="width: 150px;">
+            <span id="threshold-readout" style="color: var(--text-secondary); min-width: 40px;">65%</span>
+        </div>
+
         <table>
             <thead>
                 <tr>
-                    <th>Score</th>
-                    <th>Job Title</th>
-                    <th>Site</th>
-                    <th>Workplace</th>
-                    <th>Location</th>
+                    <th data-sort-key="score">Score</th>
+                    <th data-sort-key="job">Job</th>
+                    <th data-sort-key="site">Site</th>
+                    <th data-sort-key="location">Location</th>
+                    <th>Status</th>
                 </tr>
             </thead>
             <tbody>
                 {% for match in matches %}
-                <tr>
-                    <td>{{ match['score'] }}</td>
-                    <td>
-                        {% if match['source_url'] %}
-                            <a href="{{ match['source_url'] }}">{{ match['title'] }}</a>
-                        {% else %}
-                            {{ match['title'] }}
-                        {% endif %}
+                <tr data-score="{{ match['score'] }}">
+                    <td data-sort-value="{{ match['score'] }}">{{ "%.2f" % match['score'] }}</td>
+                    <td data-sort-value="{{ match['title'] }}">
+                        <a href="/jobs/{{ match['id'] }}">{{ match['title'] }}</a>
                     </td>
-                    <td>{{ match['site'] }}</td>
-                    <td>{{ match['workplace'] or 'N/A' }}</td>
-                    <td>{{ match['location'] or 'N/A' }}</td>
+                    <td data-sort-value="{{ match['site'] }}">{{ match['site'] }}</td>
+                    <td data-sort-value="{{ match['location'] or 'N/A' }}">{{ match['location'] or 'N/A' }}</td>
+                    <td>
+                        <form method="post" action="/matches/{{ match['id'] }}/status" style="display: inline;">
+                            <select name="status" onchange="this.form.submit()">
+                                <option value="New" {% if match['status'] == 'New' %}selected{% endif %}>New</option>
+                                <option value="Applied" {% if match['status'] == 'Applied' %}selected{% endif %}>Applied</option>
+                                <option value="Non-match" {% if match['status'] == 'Non-match' %}selected{% endif %}>Non-match</option>
+                                <option value="Done" {% if match['status'] == 'Done' %}selected{% endif %}>Done</option>
+                            </select>
+                        </form>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -66,4 +78,30 @@
         <p>No matches yet — run a rematch</p>
     {% endif %}
 </main>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const sliderEl = document.getElementById("threshold-slider");
+    const readoutEl = document.getElementById("threshold-readout");
+    const table = document.querySelector("table");
+
+    if (table && sliderEl && readoutEl) {
+        initThresholdSlider(sliderEl, readoutEl, (threshold) => {
+            const thresholdNum = parseFloat(threshold) / 100;
+            const rows = table.querySelectorAll("tbody tr");
+
+            rows.forEach(row => {
+                const score = parseFloat(row.getAttribute("data-score"));
+                if (score >= thresholdNum) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        });
+
+        makeSortable(table);
+    }
+});
+</script>
 {% endblock %}
