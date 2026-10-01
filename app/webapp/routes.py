@@ -157,6 +157,27 @@ def update_match_status_route(match_id):
     return redirect(url_for("main.resume_detail", resume_id=match["resume_id"]))
 
 
+@bp.route("/jobs/<int:match_id>", methods=["GET"])
+def job_detail(match_id):
+    conn = get_db()
+    match = db.get_match(conn, match_id)
+    if match is None:
+        abort(404)
+
+    job_info = jobs.parse_job_file(match["job_file"])
+    description = jobs.get_job_description(match["job_file"])
+
+    return render_template(
+        "job_detail.html",
+        title=match["title"],
+        site=match["site"],
+        location=match["location"],
+        workplace=match["workplace"],
+        source=match["source_url"],
+        description=description,
+    )
+
+
 @bp.route("/resumes", methods=["POST"])
 def register_resume_route():
     name = request.form["name"]

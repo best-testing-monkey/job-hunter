@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main>
+    <h1>{{ title }}</h1>
+
+    <table>
+        <tr>
+            <th>Site</th>
+            <td>{{ site }}</td>
+        </tr>
+        <tr>
+            <th>Location</th>
+            <td>{{ location or 'N/A' }}</td>
+        </tr>
+        <tr>
+            <th>Workplace</th>
+            <td>{{ workplace or 'N/A' }}</td>
+        </tr>
+    </table>
+
+    <h2>Description</h2>
+    <pre>{{ description }}</pre>
+
+    <a href="{{ source }}" class="btn-accent" target="_blank">View original posting</a>
+</main>
+{% endblock %}

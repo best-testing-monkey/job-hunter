@@ -566,3 +566,63 @@ def test_update_match_status_not_found(tmp_path):
 
     response = client.post("/matches/999999/status", data={"status": "Applied"})
     assert response.status_code == 404
+
+
+def test_job_detail_with_valid_match(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    job_file = tmp_path / "job1.md"
+    job_file.write_text("""# Software Engineer
+
+- Source: https://example.com/job1
+- Client: TechCorp
+- Location: San Francisco
+- Workplace: remote
+
+## Description
+
+This is a great job posting. You will work on exciting projects.
+""")
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
+    db.upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file=str(job_file),
+        title="Software Engineer",
+        site="TechCorp",
+        location="San Francisco",
+        workplace="remote",
+        source_url="https://example.com/job1",
+        score=0.95,
+        computed_at="2024-01-01T00:00:00",
+    )
+    matches = db.get_matches(conn, resume_id)
+    match_id = matches[0]["id"]
+    conn.close()
+
+    response = client.get(f"/jobs/{match_id}")
+    assert response.status_code == 200
+    assert b"Software Engineer" in response.data
+    assert b"This is a great job posting" in response.data
+    assert b"San Francisco" in response.data
+    assert b"remote" in response.data
+    assert b"View original posting" in response.data
+
+
+def test_job_detail_not_found(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    client = app.test_client()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    conn.close()
+
+    response = client.get("/jobs/999999")
+    assert response.status_code == 404

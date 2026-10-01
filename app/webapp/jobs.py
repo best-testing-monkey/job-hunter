@@ -12,3 +12,28 @@ def parse_job_file(path: str | Path) -> dict:
 
 def site_name_for(job_file: str) -> str:
     return build_report.site_name(job_file)
+
+
+def get_job_description(job_file: str | Path) -> str:
+    text = Path(job_file).read_text()
+    lines = text.split('\n')
+
+    description_start = None
+    next_section_start = None
+
+    for i, line in enumerate(lines):
+        if line.startswith('## Description'):
+            description_start = i + 1
+        elif description_start is not None and line.startswith('##'):
+            next_section_start = i
+            break
+
+    if description_start is None:
+        return ""
+
+    if next_section_start is None:
+        description_lines = lines[description_start:]
+    else:
+        description_lines = lines[description_start:next_section_start]
+
+    return '\n'.join(description_lines).strip()
