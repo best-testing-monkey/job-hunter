@@ -3,15 +3,143 @@
 {% block content %}
 <main>
     <h1>Resumes</h1>
-    <p><a href="/resumes/new" class="btn-accent">+ New Resume</a></p>
+    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <label for="threshold-slider" style="color: var(--text-secondary);">Threshold:</label>
+            <input type="range" min="0" max="100" value="65" id="threshold-slider" style="width: 150px;">
+            <span id="threshold-readout" style="color: var(--text-secondary); min-width: 40px;">65%</span>
+        </div>
+        <a href="/resumes/new" class="btn-accent">+ New Resume</a>
+    </div>
+
+    <script type="application/json" id="resume-match-data">{{ resume_match_data | tojson }}</script>
+
     {% if resumes %}
-        <ul>
-            {% for resume in resumes %}
-                <li><a href="/resumes/{{ resume['id'] }}">{{ resume['name'] }}</a></li>
-            {% endfor %}
-        </ul>
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--text-muted);">
+                    <th data-sort-key="name" style="text-align: left; padding: 0.75rem; cursor: pointer; user-select: none;">Name</th>
+                    <th data-sort-key="match-count" style="text-align: left; padding: 0.75rem; cursor: pointer; user-select: none;">Match count</th>
+                    <th data-sort-key="since-new-match" style="text-align: left; padding: 0.75rem; cursor: pointer; user-select: none;">since new match</th>
+                    <th style="text-align: left; padding: 0.75rem;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for resume in resumes %}
+                    <tr data-resume-id="{{ resume['id'] }}" data-rematch-running="{{ resume['rematch_running'] }}" style="border-bottom: 1px solid var(--text-muted);">
+                        <td data-sort-value="{{ resume['name'] }}" style="padding: 0.75rem;">
+                            <a href="/resumes/{{ resume['id'] }}" style="text-decoration: none; color: var(--accent);">{{ resume['name'] }}</a>
+                        </td>
+                        <td data-sort-value="0" style="padding: 0.75rem;">0</td>
+                        <td data-sort-value="—" style="padding: 0.75rem;">—</td>
+                        <td style="padding: 0.75rem; display: flex; gap: 0.75rem;">
+                            <form method="POST" action="/resumes/{{ resume['id'] }}/delete" style="display: inline;" onsubmit="return confirm('Delete this resume?');">
+                                <button type="submit" style="background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 1.2rem; padding: 0; line-height: 1;">✕</button>
+                            </form>
+                            <form method="POST" action="/resumes/{{ resume['id'] }}/rematch" style="display: inline;">
+                                <button type="submit" class="rematch-icon" data-resume-id="{{ resume['id'] }}" style="background: none; border: none; color: var(--accent); cursor: pointer; font-size: 1.2rem; padding: 0; line-height: 1;">↻</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     {% else %}
         <p>No resumes registered yet</p>
     {% endif %}
 </main>
+
+<script>
+function formatRelativeTime(dateStr) {
+    if (!dateStr) return "—";
+
+    const parsed = new Date(dateStr);
+    if (isNaN(parsed.getTime())) {
+        return "—";
+    }
+
+    const now = new Date();
+    const diffMs = now.getTime() - parsed.getTime();
+    const diffSecs = Math.floor(diffMs / 1000);
+
+    if (diffSecs < 60) return "just now";
+    const diffMins = Math.floor(diffSecs / 60);
+    if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+    const diffWeeks = Math.floor(diffDays / 7);
+    return `${diffWeeks} week${diffWeeks !== 1 ? 's' : ''} ago`;
+}
+
+function computeResumeStats(matchesData, threshold) {
+    const filteredMatches = matchesData.filter(m => m.status === "New" && m.score >= threshold);
+    const matchCount = filteredMatches.length;
+
+    let sinceNewMatch = "—";
+    if (filteredMatches.length > 0) {
+        const validDates = filteredMatches
+            .map(m => m.job_posted)
+            .filter(date => {
+                const parsed = new Date(date);
+                return !isNaN(parsed.getTime());
+            });
+
+        if (validDates.length > 0) {
+            const maxDate = new Date(Math.max(...validDates.map(d => new Date(d).getTime())));
+            sinceNewMatch = formatRelativeTime(maxDate.toISOString());
+        }
+    }
+
+    return { matchCount, sinceNewMatch };
+}
+
+const matchDataEl = document.getElementById("resume-match-data");
+const resumeMatchData = JSON.parse(matchDataEl.textContent);
+
+const sliderEl = document.getElementById("threshold-slider");
+const readoutEl = document.getElementById("threshold-readout");
+const table = document.querySelector("table");
+
+if (table) {
+    initThresholdSlider(sliderEl, readoutEl, (threshold) => {
+        const thresholdNum = parseInt(threshold, 10);
+        const rows = table.querySelectorAll("tbody tr");
+
+        rows.forEach(row => {
+            const resumeId = parseInt(row.getAttribute("data-resume-id"), 10);
+            const matches = resumeMatchData[resumeId] || [];
+            const stats = computeResumeStats(matches, thresholdNum / 100);
+
+            const matchCountCell = row.children[1];
+            const sinceNewMatchCell = row.children[2];
+
+            matchCountCell.textContent = stats.matchCount;
+            matchCountCell.setAttribute("data-sort-value", stats.matchCount);
+            sinceNewMatchCell.textContent = stats.sinceNewMatch;
+            sinceNewMatchCell.setAttribute("data-sort-value", stats.sinceNewMatch);
+        });
+    });
+
+    makeSortable(table);
+
+    const rematchButtons = document.querySelectorAll(".rematch-icon");
+    rematchButtons.forEach(btn => {
+        const resumeId = parseInt(btn.getAttribute("data-resume-id"), 10);
+        const row = btn.closest("tr");
+
+        if (row && row.getAttribute("data-rematch-running") === "1") {
+            pollRematchStatus(resumeId, btn);
+        }
+
+        btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            const form = btn.closest("form");
+            form.submit();
+            pollRematchStatus(resumeId, btn);
+        });
+    });
+}
+</script>
 {% endblock %}

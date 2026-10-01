@@ -28,6 +28,7 @@ def test_resume_list_empty(tmp_path):
     assert response.status_code == 200
     assert b"Resumes" in response.data
     assert b"No resumes registered yet" in response.data
+    assert b'id="threshold-slider"' in response.data
 
 
 def test_resume_list_with_one_resume(tmp_path):
@@ -46,6 +47,11 @@ def test_resume_list_with_one_resume(tmp_path):
     assert b"Resumes" in response.data
     assert b"My Resume" in response.data
     assert b"No resumes registered yet" not in response.data
+    assert b'id="threshold-slider"' in response.data
+    assert b'data-sort-key="name"' in response.data
+    assert b'data-sort-key="match-count"' in response.data
+    assert b'data-sort-key="since-new-match"' in response.data
+    assert b'id="resume-match-data"' in response.data
 
 
 def test_register_resume_post(tmp_path):
@@ -428,3 +434,51 @@ def test_rematch_exception_clears_running_flag(tmp_path):
     conn.close()
 
     assert resume["rematch_running"] == 0
+
+
+def test_resume_list_with_matches_includes_match_data(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
+    db.upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file="job1.txt",
+        title="Software Engineer",
+        site="TechCorp",
+        location="San Francisco",
+        workplace="remote",
+        source_url="https://example.com/job1",
+        score=0.95,
+        computed_at="2024-01-01T00:00:00",
+        job_posted="2026-09-25T10:00:00Z",
+    )
+    db.upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file="job2.txt",
+        title="Senior Engineer",
+        site="TechCorp",
+        location="New York",
+        workplace="hybrid",
+        source_url="https://example.com/job2",
+        score=0.75,
+        computed_at="2024-01-01T00:00:00",
+        job_posted="2026-09-20T10:00:00Z",
+    )
+    conn.close()
+
+    response = client.get("/")
+    assert response.status_code == 200
+    assert b"My Resume" in response.data
+    assert b'id="resume-match-data"' in response.data
+    response_text = response.get_data(as_text=True)
+    assert '"score": 0.95' in response_text
+    assert '"score": 0.75' in response_text
+    assert '"status": "New"' in response_text
+    assert f'data-resume-id="{resume_id}"' in response_text

@@ -34,7 +34,14 @@ def theme_preview():
 def resume_list():
     conn = get_db()
     resumes = db.list_resumes(conn)
-    return render_template("resumes.html", resumes=resumes)
+    resume_match_data = {}
+    for resume in resumes:
+        matches = db.get_matches(conn, resume["id"])
+        resume_match_data[resume["id"]] = [
+            {"score": m["score"], "status": m["status"], "job_posted": m["job_posted"]}
+            for m in matches
+        ]
+    return render_template("resumes.html", resumes=resumes, resume_match_data=resume_match_data)
 
 
 @bp.route("/resumes/new", methods=["GET"])
