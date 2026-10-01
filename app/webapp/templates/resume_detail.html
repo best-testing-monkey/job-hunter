@@ -41,7 +41,7 @@
             <span id="threshold-readout" style="color: var(--text-secondary); min-width: 40px;">65%</span>
         </div>
 
-        <table>
+        <table id="matches-table">
             <thead>
                 <tr>
                     <th data-sort-key="score">Score</th>
@@ -83,7 +83,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     const sliderEl = document.getElementById("threshold-slider");
     const readoutEl = document.getElementById("threshold-readout");
-    const table = document.querySelector("table");
+    const table = document.getElementById("matches-table");
 
     if (table && sliderEl && readoutEl) {
         initThresholdSlider(sliderEl, readoutEl, (threshold) => {
