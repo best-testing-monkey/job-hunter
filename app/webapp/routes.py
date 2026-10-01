@@ -53,28 +53,31 @@ def resume_detail(resume_id):
 
 
 def _run_rematch(resume_id: int, resume_file_path: str, db_path: str) -> None:
-    results = matcher.run_embed_match(resume_file_path)
     conn = db.get_connection(db_path)
-    for result in results:
-        job_file = result["job_file"]
-        score = result["score"]
-        job_info = jobs.parse_job_file(job_file)
-        site = jobs.site_name_for(job_file)
-        computed_at = datetime.now(timezone.utc).isoformat()
-        db.upsert_match(
-            conn,
-            resume_id=resume_id,
-            job_file=job_file,
-            title=job_info.get("title"),
-            site=site,
-            location=job_info.get("location"),
-            workplace=job_info.get("workplace"),
-            source_url=job_info.get("source"),
-            score=score,
-            computed_at=computed_at,
-            job_posted=None,
-        )
-    conn.close()
+    try:
+        results = matcher.run_embed_match(resume_file_path)
+        for result in results:
+            job_file = result["job_file"]
+            score = result["score"]
+            job_info = jobs.parse_job_file(job_file)
+            site = jobs.site_name_for(job_file)
+            computed_at = datetime.now(timezone.utc).isoformat()
+            db.upsert_match(
+                conn,
+                resume_id=resume_id,
+                job_file=job_file,
+                title=job_info.get("title"),
+                site=site,
+                location=job_info.get("location"),
+                workplace=job_info.get("workplace"),
+                source_url=job_info.get("source"),
+                score=score,
+                computed_at=computed_at,
+                job_posted=None,
+            )
+    finally:
+        db.set_rematch_running(conn, resume_id, False)
+        conn.close()
 
 
 @bp.route("/resumes/<int:resume_id>/rematch", methods=["POST"])
@@ -83,6 +86,7 @@ def rematch_resume(resume_id):
     resume = db.get_resume(conn, resume_id)
     if resume is None:
         abort(404)
+    db.set_rematch_running(conn, resume_id, True)
     thread = threading.Thread(
         target=_run_rematch,
         args=(resume_id, resume["file_path"], current_app.config["DATABASE"]),
@@ -90,6 +94,15 @@ def rematch_resume(resume_id):
     )
     thread.start()
     return redirect(url_for("main.resume_detail", resume_id=resume_id))
+
+
+@bp.route("/resumes/<int:resume_id>/rematch-status", methods=["GET"])
+def rematch_status(resume_id):
+    conn = get_db()
+    resume = db.get_resume(conn, resume_id)
+    if resume is None:
+        abort(404)
+    return jsonify({"running": bool(resume["rematch_running"])})
 
 
 @bp.route("/resumes/<int:resume_id>/edit", methods=["GET"])

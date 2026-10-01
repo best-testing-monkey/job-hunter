@@ -10,6 +10,7 @@ from webapp.db import (
     create_resume,
     update_resume,
     delete_resume,
+    set_rematch_running,
 )
 
 
@@ -696,5 +697,40 @@ def test_upsert_match_with_job_posted(tmp_path):
     matches = get_matches(conn, resume_id)
     assert len(matches) == 1
     assert matches[0]["job_posted"] == "2024-01-01"
+
+    conn.close()
+
+
+def test_set_rematch_running_true(tmp_path):
+    db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
+    conn = get_connection(str(db_path))
+    init_db(conn)
+
+    resume_id = create_resume(conn, str(resumes_dir), "My Resume", "# My Resume")
+
+    set_rematch_running(conn, resume_id, True)
+
+    resume = get_resume(conn, resume_id)
+    assert resume["rematch_running"] == 1
+
+    conn.close()
+
+
+def test_set_rematch_running_false(tmp_path):
+    db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
+    conn = get_connection(str(db_path))
+    init_db(conn)
+
+    resume_id = create_resume(conn, str(resumes_dir), "My Resume", "# My Resume")
+
+    set_rematch_running(conn, resume_id, True)
+    resume = get_resume(conn, resume_id)
+    assert resume["rematch_running"] == 1
+
+    set_rematch_running(conn, resume_id, False)
+    resume = get_resume(conn, resume_id)
+    assert resume["rematch_running"] == 0
 
     conn.close()

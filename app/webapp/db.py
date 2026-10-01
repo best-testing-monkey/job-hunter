@@ -21,7 +21,8 @@ def init_db(conn: sqlite3.Connection) -> None:
             name TEXT NOT NULL,
             file_path TEXT NOT NULL UNIQUE,
             created_at TEXT NOT NULL,
-            content TEXT
+            content TEXT,
+            rematch_running INTEGER NOT NULL DEFAULT 0
         )
     """)
     conn.execute("""
@@ -179,3 +180,12 @@ def delete_resume(
 
     if file_path:
         Path(file_path).unlink(missing_ok=True)
+
+
+def set_rematch_running(conn: sqlite3.Connection, resume_id: int, running: bool) -> None:
+    value = 1 if running else 0
+    conn.execute(
+        "UPDATE resumes SET rematch_running = ? WHERE id = ?",
+        (value, resume_id),
+    )
+    conn.commit()

@@ -333,3 +333,98 @@ def test_delete_resume_not_found(tmp_path):
 
     response = client.post("/resumes/999999/delete")
     assert response.status_code == 404
+
+
+def test_rematch_status_not_running(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
+    conn.close()
+
+    response = client.get(f"/resumes/{resume_id}/rematch-status")
+    assert response.status_code == 200
+    assert response.get_json() == {"running": False}
+
+
+def test_rematch_status_not_found(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    client = app.test_client()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    conn.close()
+
+    response = client.get("/resumes/999999/rematch-status")
+    assert response.status_code == 404
+
+
+def test_rematch_status_running_flag_set(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
+    db.set_rematch_running(conn, resume_id, True)
+    conn.close()
+
+    response = client.get(f"/resumes/{resume_id}/rematch-status")
+    assert response.status_code == 200
+    assert response.get_json() == {"running": True}
+
+
+def test_rematch_exception_clears_running_flag(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
+    conn.close()
+
+    def mock_parse_job_file(path):
+        return {
+            "title": "Software Engineer",
+            "location": "San Francisco",
+            "workplace": "remote",
+            "source": "https://example.com/job1",
+        }
+
+    def mock_site_name_for(job_file):
+        return "TechCorp"
+
+    class SyncThread:
+        def __init__(self, *args, **kwargs):
+            self.target = kwargs.get("target")
+            self.args = kwargs.get("args", ())
+
+        def start(self):
+            self.target(*self.args)
+
+    def mock_run_embed_match_raises(path):
+        raise Exception("Matcher failed")
+
+    with patch("webapp.matcher.run_embed_match", side_effect=mock_run_embed_match_raises):
+        with patch("webapp.jobs.parse_job_file", side_effect=mock_parse_job_file):
+            with patch("webapp.jobs.site_name_for", side_effect=mock_site_name_for):
+                with patch("threading.Thread", SyncThread):
+                    try:
+                        response = client.post(f"/resumes/{resume_id}/rematch")
+                    except Exception:
+                        pass
+
+    conn = db.get_connection(app.config["DATABASE"])
+    resume = db.get_resume(conn, resume_id)
+    conn.close()
+
+    assert resume["rematch_running"] == 0
