@@ -47,3 +47,46 @@ but there's nothing else pending right now).
 - [x] E7-S02 Switch resume creation to content-based, remove register_resume (docs/tickets/E7-S02-content-based-create.md)
 - [x] E7-S03 Edit a resume (docs/tickets/E7-S03-edit-resume.md)
 - [x] E7-S04 Delete a resume (docs/tickets/E7-S04-delete-resume.md)
+
+## Epic 8 — Match status, job_posted, rematch-running state
+
+Sequential (both touch `db.py`; E8-S02 also touches `routes.py`). Can start
+in parallel with Epic 9's first story (disjoint files).
+
+- [ ] E8-S01 Add match status, job_posted column, and match lookup functions (docs/tickets/E8-S01-match-status-and-posted-date.md)
+- [ ] E8-S02 Track rematch-running state and expose a status endpoint (docs/tickets/E8-S02-rematch-running-state.md)
+
+## Epic 9 — Homepage dashboard
+
+E9-S01 is new files only (`app.js`, `base.html`, `style.css`) — can run in
+parallel with E8-S01. E9-S02 depends on both E8-S01/E8-S02 and E9-S01, and
+touches `routes.py` — sequential after those.
+
+- [ ] E9-S01 Add app.js foundation (threshold slider, table sort, rematch polling) (docs/tickets/E9-S01-app-js-foundation.md)
+- [ ] E9-S02 Rebuild homepage as a sortable dashboard with threshold filtering (docs/tickets/E9-S02-homepage-dashboard.md)
+
+## Epic 10 — Resume detail page redesign
+
+E10-S01 only touches `resume_detail.html` — can run in parallel with
+Epic 8/9 work. E10-S02 depends on E8-S01, E9-S01, and E10-S01, and touches
+`routes.py` — sequential after those.
+
+- [ ] E10-S01 Style the resume metadata section on the detail page (docs/tickets/E10-S01-resume-metadata-table.md)
+- [ ] E10-S02 Add sortable, threshold-filtered match table with status workflow (docs/tickets/E10-S02-sortable-matches-with-status.md)
+
+## Epic 11 — Job detail page
+
+Depends on E8-S01, touches `routes.py` — sequential relative to the other
+`routes.py`-touching stories above.
+
+- [ ] E11-S01 Add job detail page (docs/tickets/E11-S01-job-detail-page.md)
+
+## Epic 12 — Remaining usability QA fixes
+
+E12-S01 and E12-S02 are sequential (same templates). E12-S03 only touches
+`__init__.py` and a new template — can run in parallel with anything that
+doesn't also touch `__init__.py` (nothing else in this batch does).
+
+- [ ] E12-S01 Reject blank/whitespace resume name or content; create redirects to the new resume (docs/tickets/E12-S01-resume-form-validation.md)
+- [ ] E12-S02 Style the New/Edit resume forms and size the content textarea (docs/tickets/E12-S02-style-resume-forms.md)
+- [ ] E12-S03 Add a dark-themed 404 error page (docs/tickets/E12-S03-styled-404-page.md)
