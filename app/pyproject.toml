@@ -7,7 +7,7 @@ dependencies = [
     "flask",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "pytest",
 ]
