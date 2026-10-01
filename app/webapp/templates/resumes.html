@@ -95,51 +95,58 @@ function computeResumeStats(matchesData, threshold) {
     return { matchCount, sinceNewMatch };
 }
 
-const matchDataEl = document.getElementById("resume-match-data");
-const resumeMatchData = JSON.parse(matchDataEl.textContent);
+document.addEventListener("DOMContentLoaded", () => {
+    // app.js is loaded with `defer`, which only delays *external* scripts —
+    // this inline block would otherwise run during parsing, before app.js
+    // has executed, and crash with "initThresholdSlider is not defined".
+    // DOMContentLoaded fires after all deferred scripts have run, so this
+    // guarantees app.js's functions exist by the time we call them.
+    const matchDataEl = document.getElementById("resume-match-data");
+    const resumeMatchData = JSON.parse(matchDataEl.textContent);
 
-const sliderEl = document.getElementById("threshold-slider");
-const readoutEl = document.getElementById("threshold-readout");
-const table = document.querySelector("table");
+    const sliderEl = document.getElementById("threshold-slider");
+    const readoutEl = document.getElementById("threshold-readout");
+    const table = document.querySelector("table");
 
-if (table) {
-    initThresholdSlider(sliderEl, readoutEl, (threshold) => {
-        const thresholdNum = parseInt(threshold, 10);
-        const rows = table.querySelectorAll("tbody tr");
+    if (table) {
+        initThresholdSlider(sliderEl, readoutEl, (threshold) => {
+            const thresholdNum = parseInt(threshold, 10);
+            const rows = table.querySelectorAll("tbody tr");
 
-        rows.forEach(row => {
-            const resumeId = parseInt(row.getAttribute("data-resume-id"), 10);
-            const matches = resumeMatchData[resumeId] || [];
-            const stats = computeResumeStats(matches, thresholdNum / 100);
+            rows.forEach(row => {
+                const resumeId = parseInt(row.getAttribute("data-resume-id"), 10);
+                const matches = resumeMatchData[resumeId] || [];
+                const stats = computeResumeStats(matches, thresholdNum / 100);
 
-            const matchCountCell = row.children[1];
-            const sinceNewMatchCell = row.children[2];
+                const matchCountCell = row.children[1];
+                const sinceNewMatchCell = row.children[2];
 
-            matchCountCell.textContent = stats.matchCount;
-            matchCountCell.setAttribute("data-sort-value", stats.matchCount);
-            sinceNewMatchCell.textContent = stats.sinceNewMatch;
-            sinceNewMatchCell.setAttribute("data-sort-value", stats.sinceNewMatch);
+                matchCountCell.textContent = stats.matchCount;
+                matchCountCell.setAttribute("data-sort-value", stats.matchCount);
+                sinceNewMatchCell.textContent = stats.sinceNewMatch;
+                sinceNewMatchCell.setAttribute("data-sort-value", stats.sinceNewMatch);
+            });
         });
-    });
 
-    makeSortable(table);
+        makeSortable(table);
 
-    const rematchButtons = document.querySelectorAll(".rematch-icon");
-    rematchButtons.forEach(btn => {
-        const resumeId = parseInt(btn.getAttribute("data-resume-id"), 10);
-        const row = btn.closest("tr");
+        const rematchButtons = document.querySelectorAll(".rematch-icon");
+        rematchButtons.forEach(btn => {
+            const resumeId = parseInt(btn.getAttribute("data-resume-id"), 10);
+            const row = btn.closest("tr");
 
-        if (row && row.getAttribute("data-rematch-running") === "1") {
-            pollRematchStatus(resumeId, btn);
-        }
+            if (row && row.getAttribute("data-rematch-running") === "1") {
+                pollRematchStatus(resumeId, btn);
+            }
 
-        btn.addEventListener("click", (e) => {
-            e.preventDefault();
-            const form = btn.closest("form");
-            form.submit();
-            pollRematchStatus(resumeId, btn);
+            btn.addEventListener("click", (e) => {
+                e.preventDefault();
+                const form = btn.closest("form");
+                form.submit();
+                pollRematchStatus(resumeId, btn);
+            });
         });
-    });
-}
+    }
+});
 </script>
 {% endblock %}
