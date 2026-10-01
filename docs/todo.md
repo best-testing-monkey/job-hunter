@@ -53,7 +53,7 @@ but there's nothing else pending right now).
 Sequential (both touch `db.py`; E8-S02 also touches `routes.py`). Can start
 in parallel with Epic 9's first story (disjoint files).
 
-- [ ] E8-S01 Add match status, job_posted column, and match lookup functions (docs/tickets/E8-S01-match-status-and-posted-date.md)
+- [x] E8-S01 Add match status, job_posted column, and match lookup functions (docs/tickets/E8-S01-match-status-and-posted-date.md)
 - [ ] E8-S02 Track rematch-running state and expose a status endpoint (docs/tickets/E8-S02-rematch-running-state.md)
 
 ## Epic 9 — Homepage dashboard
@@ -62,7 +62,7 @@ E9-S01 is new files only (`app.js`, `base.html`, `style.css`) — can run in
 parallel with E8-S01. E9-S02 depends on both E8-S01/E8-S02 and E9-S01, and
 touches `routes.py` — sequential after those.
 
-- [ ] E9-S01 Add app.js foundation (threshold slider, table sort, rematch polling) (docs/tickets/E9-S01-app-js-foundation.md)
+- [x] E9-S01 Add app.js foundation (threshold slider, table sort, rematch polling) (docs/tickets/E9-S01-app-js-foundation.md)
 - [ ] E9-S02 Rebuild homepage as a sortable dashboard with threshold filtering (docs/tickets/E9-S02-homepage-dashboard.md)
 
 ## Epic 10 — Resume detail page redesign
