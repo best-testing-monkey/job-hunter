@@ -219,6 +219,152 @@ is.
   still works unmodified; delete it and confirm the file, DB row, and any
   matches are gone.
 
+## Dashboard, match workflow, and job detail (third slice)
+
+Driven by two inputs: a user-authored flow describing a richer homepage and
+detail page, and an independent usability QA pass (`docs/usability-qa-report.md`,
+11 findings) run against the first two slices. This section specifies the
+new flow in full and states explicitly, finding by finding, which QA items
+it resolves as a side effect and which still need a standalone fix.
+
+### Architecture change: this slice introduces real client-side JavaScript
+
+Everything built so far is pure server-rendered HTML with one inline
+`onsubmit="return confirm(...)"`. Three new behaviors can't be done that
+way:
+
+- The confidence-threshold slider persists in the browser
+  (`localStorage`), not the server, and must re-filter/re-sort visible
+  rows **instantly** as it's dragged — a server round-trip per drag tick
+  is wrong.
+- Table columns sort client-side, in-place, with a 3-state cycle.
+- The rematch "spinning while running" icon reflects live server state
+  the page must poll for without a full reload.
+
+New file: `app/webapp/static/app.js` — plain vanilla JS, no framework, no
+build step (consistent with this project's dependency-light style). Three
+independent pieces, each usable without the others:
+
+1. **Threshold slider** (`initThresholdSlider()`): reads/writes a single
+   shared `localStorage` key (`confidenceThreshold`, default `65`) used by
+   *both* the homepage and the resume detail page — moving it on either
+   page updates the same stored value. On `input`, re-runs whatever
+   filter/recompute callback the current page registered (homepage
+   recomputes Match Count/since-new-match from embedded JSON; detail page
+   shows/hides match rows by comparing each row's `data-score` attribute).
+2. **Table sort** (`makeSortable(table)`): attached to each sortable
+   `<th>`. Click cycle: unsorted → ascending (▼ next to the label) →
+   descending (▲) → unsorted (no arrow), removing any arrow from other
+   columns when a new one is clicked (only one column sorted at a time).
+   Sorts by reading each row's `data-sort-value` attribute (so numeric/date
+   columns sort correctly, not as strings) and re-appending `<tr>`s in the
+   new order — no server round-trip, since the full dataset is already in
+   the DOM. Sort state is **not** persisted across reloads.
+3. **Rematch status polling** (`pollRematchStatus(resumeId, iconEl)`):
+   while a rematch is running for a resume, `fetch`es
+   `GET /resumes/<id>/rematch-status` every ~2s and toggles a `.spinning`
+   CSS class (a simple `@keyframes` rotation) on that resume's refresh
+   icon; stops polling once the response says it's no longer running.
+
+### Data model changes
+
+```sql
+ALTER TABLE matches ADD COLUMN status TEXT NOT NULL DEFAULT 'New';
+ALTER TABLE matches ADD COLUMN job_posted TEXT;
+ALTER TABLE resumes ADD COLUMN rematch_running INTEGER NOT NULL DEFAULT 0;
+```
+
+- `matches.status` — one of `New` / `Non-match` / `Applied` / `Done`
+  (validate in app code, no DB-level CHECK needed for a single-user tool).
+  Defaults to `New` for every newly-upserted match; **a rematch upsert
+  must NOT reset an already-triaged match's status back to `New`** — only
+  `score`/`title`/`site`/`location`/`workplace`/`source_url`/`job_posted`/
+  `computed_at` get overwritten on conflict, `status` is left alone unless
+  the row is brand new.
+- `matches.job_posted` — the job's `Posted:` date (from
+  `jobs.parse_job_file()`'s existing `posted` field), stored at match-write
+  time so "since new match" doesn't need to re-read every job file on
+  every homepage load. Populate it in `_run_rematch`'s existing call to
+  `jobs.parse_job_file()` (already fetches this field, just wasn't being
+  passed through to `upsert_match`).
+- `resumes.rematch_running` — `1` while `_run_rematch` is executing for
+  that resume, `0` otherwise. Set to `1` right before the background
+  thread starts (in `rematch_resume`, before `thread.start()`), reset to
+  `0` in a `try/finally` inside `_run_rematch` so a crashed matcher run
+  still clears the flag (don't leave a resume stuck "forever spinning").
+
+### Homepage (`/`)
+
+- **Confidence slider**: `<input type="range" min="0" max="100" value="65">`
+  with a live `%` readout, positioned above the table, `localStorage`-backed
+  per the Architecture section above.
+- **"+ New Resume"**: unchanged destination (`/resumes/new`), just
+  repositioned to sit beside the slider rather than below the list.
+- **Resume table**, columns `Name` / `Match count` / `since new match` /
+  `Actions`, one `<tr>` per resume:
+  - Sortable on all but `Actions` (3-state cycle, see Architecture).
+  - `Match count` and `since new match` are **computed client-side** from
+    a per-resume JSON blob the server embeds in the page (each resume's
+    full `[{score, status, job_posted}, ...]` match list — modest data
+    volume for a single-user local tool, no pagination API needed). JS
+    recomputes both whenever the slider moves:
+    - Match count = number of entries where `status == "New" && score >=
+      threshold`.
+    - since new match = `now - max(job_posted where score >= threshold)`,
+      rendered as a relative delta ("3 hours ago", "2 days ago"); `"—"` if
+      no match clears the threshold.
+  - `Actions`: red-X delete icon (existing confirm dialog, just
+    re-skinned as an icon instead of a text button) and a circular-arrow
+    rematch icon that POSTs to the existing `/resumes/<id>/rematch` and
+    immediately starts polling (see Architecture) so it spins for the
+    actual duration of the run, not a guess.
+
+### Resume detail page (`/resumes/<id>`)
+
+- Resume name/content/metadata (file path, created date) in a **styled
+  table**, replacing the current plain heading + paragraph.
+- The same confidence slider (shared `localStorage` key) sits above the
+  matches table and filters (hides/shows, client-side) rows by
+  `data-score`.
+- Matches table, sortable (same mechanism), **default sort: score,
+  descending**. Columns as today (Score, Job, Site, Location) plus:
+  - **Status** — a `<select>` per row (`New`/`Non-match`/`Applied`/`Done`),
+    styled to match the rest of the table rather than a bare browser
+    widget (still a real `<select>`, just CSS-skinned — no custom JS
+    dropdown needed). On `change`, `POST`s to
+    `/matches/<match_id>/status` (new route) to persist immediately —
+    no separate "Save" step.
+  - **Job** (title) now links to the new job detail page (see below)
+    instead of linking straight out to `source_url`.
+
+### Job detail page (new)
+
+- `GET /jobs/<int:match_id>` — looks up the match row (for its
+  `job_file`), re-reads that file fresh from disk via a new
+  `jobs.get_job_description(job_file) -> str` helper (reads the raw
+  markdown, returns everything between the `## Description` heading and
+  the next `##` heading or end-of-file — this is new logic in `app/`,
+  *not* an edit to `resume-matcher/build_report.py`, since that function
+  deliberately only parses the metadata bullets today). Renders title,
+  site, location, workplace, full description text, and a "View original
+  posting" link to `source_url`.
+- 404s if the `match_id` doesn't exist.
+
+### Mapping to the usability QA findings
+
+| # | Finding | Resolution |
+|---|---|---|
+| 1, 2 | Blank/whitespace resume name or content silently saved | **Not fixed by the above — needs its own story**: reject blank/whitespace `name`/`content` server-side on both create and edit, re-render the form with the entered values and an error instead of redirecting. |
+| 3 | New/Edit forms unstyled, 1-line textarea | **Not fixed by the above — needs its own story**: style both forms consistently with the rest of the app, size the textarea for real resume content (`rows`, monospace, sensible width). |
+| 4 | 404 page is raw unstyled Werkzeug output | **Not fixed by the above — needs its own story**: a Flask error handler rendering a dark-themed 404 page. |
+| 5 | No feedback after clicking Rematch | **Fixed** by the spinning-icon + polling mechanism above. |
+| 6 | Match scores shown at 16 decimal places | **Fixed in passing** while building the new sortable match tables — render as a rounded 2-decimal value (`data-sort-value` keeps the raw float for correct sorting; displayed text is rounded). |
+| 7 | 1,079 unfiltered matches, no floor | **Fixed** by the confidence threshold slider filtering what's shown. |
+| 8 | Create redirects to list, Edit redirects to detail (inconsistent) | **Not fixed by the above — needs its own story**: make `POST /resumes` (create) redirect straight to the new resume's detail page, matching edit's behavior. |
+| 9 | Links render browser-default blue, not the accent color | **Fixed in passing** while restyling the tables this slice touches — style `a` globally in `style.css` to use the accent color. |
+| 10 | Raw filesystem path shown on resume detail page | **Fixed in passing** — the new styled metadata table gives it a proper labeled cell instead of a raw sentence. |
+| 11 | Match table overflows on a 390px mobile viewport | **Deferred, explicitly out of scope** — this is a localhost desktop tool; mobile layout isn't a goal right now. |
+
 ## Visual design tokens
 
 Dark-only theme (no light mode, no toggle), modeled on a reference site
