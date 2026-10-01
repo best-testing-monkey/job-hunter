@@ -72,6 +72,7 @@ def _run_rematch(resume_id: int, resume_file_path: str, db_path: str) -> None:
             source_url=job_info.get("source"),
             score=score,
             computed_at=computed_at,
+            job_posted=None,
         )
     conn.close()
 

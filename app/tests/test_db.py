@@ -4,6 +4,8 @@ from webapp.db import (
     list_resumes,
     upsert_match,
     get_matches,
+    get_match,
+    update_match_status,
     get_resume,
     create_resume,
     update_resume,
@@ -476,5 +478,223 @@ def test_delete_resume_twice(tmp_path):
 
     resume = get_resume(conn, resume_id)
     assert resume is None
+
+    conn.close()
+
+
+def test_upsert_match_creates_with_new_status(tmp_path):
+    db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
+    conn = get_connection(str(db_path))
+    init_db(conn)
+
+    resume_id = create_resume(conn, str(resumes_dir), "My Resume", "# My Resume")
+
+    upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file="job1.txt",
+        title="Software Engineer",
+        site="TechCorp",
+        location="San Francisco",
+        workplace="remote",
+        source_url="https://example.com/job1",
+        score=0.95,
+        computed_at="2024-01-01T00:00:00",
+    )
+
+    matches = get_matches(conn, resume_id)
+    assert len(matches) == 1
+    assert matches[0]["status"] == "New"
+
+    conn.close()
+
+
+def test_get_match_returns_row(tmp_path):
+    db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
+    conn = get_connection(str(db_path))
+    init_db(conn)
+
+    resume_id = create_resume(conn, str(resumes_dir), "My Resume", "# My Resume")
+
+    upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file="job1.txt",
+        title="Software Engineer",
+        site="TechCorp",
+        location="San Francisco",
+        workplace="remote",
+        source_url="https://example.com/job1",
+        score=0.95,
+        computed_at="2024-01-01T00:00:00",
+    )
+
+    matches = get_matches(conn, resume_id)
+    match_id = matches[0]["id"]
+    match = get_match(conn, match_id)
+
+    assert match is not None
+    assert match["id"] == match_id
+    assert match["title"] == "Software Engineer"
+    assert match["status"] == "New"
+
+    conn.close()
+
+
+def test_get_match_returns_none_for_nonexistent_id(tmp_path):
+    db_path = tmp_path / "test.db"
+    conn = get_connection(str(db_path))
+    init_db(conn)
+
+    match = get_match(conn, 999999)
+    assert match is None
+
+    conn.close()
+
+
+def test_update_match_status_changes_status(tmp_path):
+    db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
+    conn = get_connection(str(db_path))
+    init_db(conn)
+
+    resume_id = create_resume(conn, str(resumes_dir), "My Resume", "# My Resume")
+
+    upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file="job1.txt",
+        title="Software Engineer",
+        site="TechCorp",
+        location="San Francisco",
+        workplace="remote",
+        source_url="https://example.com/job1",
+        score=0.95,
+        computed_at="2024-01-01T00:00:00",
+    )
+
+    matches = get_matches(conn, resume_id)
+    match_id = matches[0]["id"]
+
+    update_match_status(conn, match_id, "Applied")
+
+    match = get_match(conn, match_id)
+    assert match["status"] == "Applied"
+
+    conn.close()
+
+
+def test_update_match_status_invalid_status_raises_error(tmp_path):
+    db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
+    conn = get_connection(str(db_path))
+    init_db(conn)
+
+    resume_id = create_resume(conn, str(resumes_dir), "My Resume", "# My Resume")
+
+    upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file="job1.txt",
+        title="Software Engineer",
+        site="TechCorp",
+        location="San Francisco",
+        workplace="remote",
+        source_url="https://example.com/job1",
+        score=0.95,
+        computed_at="2024-01-01T00:00:00",
+    )
+
+    matches = get_matches(conn, resume_id)
+    match_id = matches[0]["id"]
+
+    try:
+        update_match_status(conn, match_id, "Bogus")
+        assert False, "Should have raised ValueError"
+    except ValueError:
+        pass
+
+    match = get_match(conn, match_id)
+    assert match["status"] == "New"
+
+    conn.close()
+
+
+def test_upsert_match_preserves_status_on_conflict(tmp_path):
+    db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
+    conn = get_connection(str(db_path))
+    init_db(conn)
+
+    resume_id = create_resume(conn, str(resumes_dir), "My Resume", "# My Resume")
+
+    upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file="job1.txt",
+        title="Software Engineer",
+        site="TechCorp",
+        location="San Francisco",
+        workplace="remote",
+        source_url="https://example.com/job1",
+        score=0.95,
+        computed_at="2024-01-01T00:00:00",
+    )
+
+    matches = get_matches(conn, resume_id)
+    match_id = matches[0]["id"]
+
+    update_match_status(conn, match_id, "Applied")
+
+    upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file="job1.txt",
+        title="Senior Software Engineer",
+        site="TechCorp",
+        location="New York",
+        workplace="hybrid",
+        source_url="https://example.com/job1",
+        score=0.87,
+        computed_at="2024-01-02T00:00:00",
+        job_posted="2024-01-02",
+    )
+
+    match = get_match(conn, match_id)
+    assert match["status"] == "Applied"
+    assert match["score"] == 0.87
+    assert match["title"] == "Senior Software Engineer"
+    assert match["job_posted"] == "2024-01-02"
+
+    conn.close()
+
+
+def test_upsert_match_with_job_posted(tmp_path):
+    db_path = tmp_path / "test.db"
+    resumes_dir = tmp_path / "resumes"
+    conn = get_connection(str(db_path))
+    init_db(conn)
+
+    resume_id = create_resume(conn, str(resumes_dir), "My Resume", "# My Resume")
+
+    upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file="job1.txt",
+        title="Software Engineer",
+        site="TechCorp",
+        location="San Francisco",
+        workplace="remote",
+        source_url="https://example.com/job1",
+        score=0.95,
+        computed_at="2024-01-01T00:00:00",
+        job_posted="2024-01-01",
+    )
+
+    matches = get_matches(conn, resume_id)
+    assert len(matches) == 1
+    assert matches[0]["job_posted"] == "2024-01-01"
 
     conn.close()

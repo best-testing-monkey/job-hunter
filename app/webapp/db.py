@@ -36,6 +36,8 @@ def init_db(conn: sqlite3.Connection) -> None:
             source_url TEXT,
             score REAL NOT NULL,
             computed_at TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'New',
+            job_posted TEXT,
             UNIQUE(resume_id, job_file)
         )
     """)
@@ -63,11 +65,12 @@ def upsert_match(
     source_url: str | None,
     score: float,
     computed_at: str,
+    job_posted: str | None = None,
 ) -> None:
     conn.execute(
         """
-        INSERT INTO matches (resume_id, job_file, title, site, location, workplace, source_url, score, computed_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO matches (resume_id, job_file, title, site, location, workplace, source_url, score, computed_at, job_posted)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(resume_id, job_file) DO UPDATE SET
             title=excluded.title,
             site=excluded.site,
@@ -75,9 +78,10 @@ def upsert_match(
             workplace=excluded.workplace,
             source_url=excluded.source_url,
             score=excluded.score,
-            computed_at=excluded.computed_at
+            computed_at=excluded.computed_at,
+            job_posted=excluded.job_posted
         """,
-        (resume_id, job_file, title, site, location, workplace, source_url, score, computed_at),
+        (resume_id, job_file, title, site, location, workplace, source_url, score, computed_at, job_posted),
     )
     conn.commit()
 
@@ -97,6 +101,22 @@ def get_matches(
 
     cursor = conn.execute(query, (resume_id,))
     return cursor.fetchall()
+
+
+def get_match(conn: sqlite3.Connection, match_id: int) -> sqlite3.Row | None:
+    cursor = conn.execute("SELECT * FROM matches WHERE id = ?", (match_id,))
+    return cursor.fetchone()
+
+
+def update_match_status(conn: sqlite3.Connection, match_id: int, status: str) -> None:
+    valid_statuses = {"New", "Non-match", "Applied", "Done"}
+    if status not in valid_statuses:
+        raise ValueError(f"Invalid status: {status}")
+    conn.execute(
+        "UPDATE matches SET status = ? WHERE id = ?",
+        (status, match_id),
+    )
+    conn.commit()
 
 
 def create_resume(
