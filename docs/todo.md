@@ -72,7 +72,7 @@ Epic 8/9 work. E10-S02 depends on E8-S01, E9-S01, and E10-S01, and touches
 `routes.py` — sequential after those.
 
 - [x] E10-S01 Style the resume metadata section on the detail page (docs/tickets/E10-S01-resume-metadata-table.md)
-- [ ] E10-S02 Add sortable, threshold-filtered match table with status workflow (docs/tickets/E10-S02-sortable-matches-with-status.md)
+- [x] E10-S02 Add sortable, threshold-filtered match table with status workflow (docs/tickets/E10-S02-sortable-matches-with-status.md)
 
 ## Epic 11 — Job detail page
 
