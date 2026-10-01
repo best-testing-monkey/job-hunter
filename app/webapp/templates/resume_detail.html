@@ -2,8 +2,25 @@
 
 {% block content %}
 <main>
-    <h1>{{ resume['name'] }}</h1>
-    <p>File: {{ resume['file_path'] }}</p>
+    <table>
+        <tr>
+            <th>Name</th>
+            <td>{{ resume['name'] }}</td>
+        </tr>
+        <tr>
+            <th>Created</th>
+            <td>{{ resume['created_at'] }}</td>
+        </tr>
+        <tr>
+            <th>File path</th>
+            <td>{{ resume['file_path'] }}</td>
+        </tr>
+    </table>
+
+    <details>
+        <summary>Content</summary>
+        <pre>{{ resume['content'] }}</pre>
+    </details>
 
     <a href="/resumes/{{ resume['id'] }}/edit">Edit</a>
 
