@@ -71,7 +71,7 @@ E10-S01 only touches `resume_detail.html` — can run in parallel with
 Epic 8/9 work. E10-S02 depends on E8-S01, E9-S01, and E10-S01, and touches
 `routes.py` — sequential after those.
 
-- [ ] E10-S01 Style the resume metadata section on the detail page (docs/tickets/E10-S01-resume-metadata-table.md)
+- [x] E10-S01 Style the resume metadata section on the detail page (docs/tickets/E10-S01-resume-metadata-table.md)
 - [ ] E10-S02 Add sortable, threshold-filtered match table with status workflow (docs/tickets/E10-S02-sortable-matches-with-status.md)
 
 ## Epic 11 — Job detail page
@@ -89,4 +89,4 @@ doesn't also touch `__init__.py` (nothing else in this batch does).
 
 - [ ] E12-S01 Reject blank/whitespace resume name or content; create redirects to the new resume (docs/tickets/E12-S01-resume-form-validation.md)
 - [ ] E12-S02 Style the New/Edit resume forms and size the content textarea (docs/tickets/E12-S02-style-resume-forms.md)
-- [ ] E12-S03 Add a dark-themed 404 error page (docs/tickets/E12-S03-styled-404-page.md)
+- [x] E12-S03 Add a dark-themed 404 error page (docs/tickets/E12-S03-styled-404-page.md)
