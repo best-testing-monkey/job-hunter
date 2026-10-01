@@ -10,6 +10,7 @@ Make the resume detail page's match table sortable, filterable by the shared con
 
 - Depends on E8-S01 (`status`/`job_posted` columns, `get_match`/`update_match_status`), E9-S01 (`app.js`'s `initThresholdSlider`/`makeSortable`), and E10-S01 (same template — read its final state first, build on it, don't undo its metadata-table change).
 - Read `docs/DESIGN_DOC.md`'s "Resume detail page" subsection in full.
+- **Critical gotcha, already hit once on this page's sibling (the homepage, E9-S02)**: `app.js` loads via `<script src="..." defer>` in `base.html`. `defer` only applies to *external* scripts — it does nothing for an inline `<script>` block with no `src`, which still runs synchronously during HTML parsing. If your own inline script calls `initThresholdSlider`/`makeSortable` directly at the top level, it will run *before* the deferred `app.js` has executed and crash with `ReferenceError: initThresholdSlider is not defined` — silently leaving the whole page non-interactive (this exact bug shipped in E9-S02 and was only caught by manually loading the page and checking the browser console, not by reading the code or running pytest). **Wrap your entire inline script's body in `document.addEventListener("DOMContentLoaded", () => { ... })`** — look at `resumes.html`'s current inline script for the fixed pattern to copy.
 - The job detail page (`GET /jobs/<match_id>`) doesn't exist yet (built in E11-S01, which may run after this story) — link to `/jobs/{{ match['id'] }}` anyway; it's fine for that link to 404 until E11-S01 lands, this story's own tests shouldn't depend on that route existing.
 
 ## Files to modify
@@ -29,7 +30,7 @@ Make the resume detail page's match table sortable, filterable by the shared con
 - `POST /matches/999999/status` (nonexistent match) returns HTTP 404.
 - `GET /resumes/<id>` (with at least one match) shows the match's score rounded to 2 decimals in the visible text, a `<select>` with the correct current status selected, and a link to `/jobs/<match_id>`.
 - `uv run pytest tests/ -q` (from `app/`) passes.
-- Manual/visual check: load the page in a browser or headless-chrome screenshot, confirm the slider actually hides/shows rows and clicking a column header sorts it — the same caveat as E9-S02 about no JS test runner applies.
+- Manual/visual check, and this time check for JS errors, not just how the page looks: load the page in a real browser or headless Chrome with console logging enabled (`google-chrome --headless=new --enable-logging=stderr --v=1 --dump-dom <url> 2>&1 | grep -i console` — or equivalent), confirm there is no `ReferenceError`/`Uncaught` anywhere, and confirm the slider actually hides/shows rows and clicking a column header sorts it. A passing pytest suite and "the HTML looks right" are not sufficient evidence for this story — the actual JS execution must be observed.
 
 ## Definition of done
 
