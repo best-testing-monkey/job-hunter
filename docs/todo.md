@@ -125,7 +125,7 @@ S02 first; S03-S08 each touch different adapter files (+ their test files) but a
 
 Independent of the scraper stories (touches only `app/`, can run any time), but S11 -> S12 are sequential (`routes.py`/template are touched again by S33/S34).
 
-- [ ] E13-S11 App: add `markdown` dependency and `render_description_html` (escaped, sanitized); fix description extraction for `###` headings (docs/tickets/E13-S11-app-render-description-markdown.md)
+- [x] E13-S11 App: add `markdown` dependency and `render_description_html` (escaped, sanitized); fix description extraction for `###` headings (docs/tickets/E13-S11-app-render-description-markdown.md)
 - [ ] E13-S12 App: render the description as styled Markdown on the job detail page (dark theme) (docs/tickets/E13-S12-app-job-detail-markdown-view.md)
 
 ### Part 2 — Correct source URLs
