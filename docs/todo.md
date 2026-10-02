@@ -104,6 +104,8 @@ FOLLOW-UP (S28): pro_act has NO screenshot_selector (BLOCKED: apply form `div.co
 LIVE-QA FLAGS (S29, check in S35): stone_interim selector BLOCKED (saved page is a client-rendered shell; find selector on the live page); harveynash `div.post-content` also holds a "Reageren" button + share icons; working_nomads uses `div.jd-desktop div.jd-description` (page renders description twice; viewport is 1280px wide in capture_element so desktop copy is visible).
 LIVE-QA FLAGS (S30): iamexpat selector is a hashed CSS-module class `div.BodyCenter_main__Sz_2E` (no stable wrapper; also captures alert signup/Similar jobs/Apply buttons; may break on site rebuild); sevenstars + circle8 show a Cookiebot overlay that must be dismissed/hidden before the element shot.
 LIVE-QA FLAGS (S31): guru element is truncated in saved HTML ("... Show more") — full text may need a live click/expand; arc_dev check tab visibility live; no overlays seen in saved HTML for arc_dev/freelancer_com/freelancermap/guru.
+LIVE-QA FLAGS (S32): ictergezocht fixture has CookieYes overlay `#cookieyes-banner`; all 50 raw ictergezocht pages are Cloudflare challenge pages (only 1 fixture verifiable); wearedevelopers selector uses `:has()` (needs Chromium>=105, fine); headfirst + planet_interim intentionally None (no description scraped).
+STORY ADDED: E13-S36 (overlay/form hiding) runs after S32, before gate 3 + S33/S34.
 Status log: tick each story here as it lands; gates done so far: (none)
 
 Scraper stories follow `docs/tickets/APPENDIX-A-standards.md` plus `docs/tickets/APPENDIX-B-scraper-standards.md`; app stories follow Appendix A only. The scraper stories touch the same adapter files several times (description, source URL, selector): run them one at a time, in the order listed. Keep any parallel subagent batch to 2 at a time, and only across scraper/app (never two scraper stories together).
@@ -163,7 +165,8 @@ S20 -> S22 -> S23 -> S24 -> S25 -> S26 -> S27 are a chain (S21 is independent of
 - [x] E13-S29 Screenshot selectors: stone_interim, tender_link, harveynash, working_nomads (docs/tickets/E13-S29-selectors-batch-b.md)
 - [x] E13-S30 Screenshot selectors: sevenstars, circle8, iamexpat, djinni (docs/tickets/E13-S30-selectors-batch-c.md)
 - [x] E13-S31 Screenshot selectors: arc_dev, freelancer_com, freelancermap, guru (docs/tickets/E13-S31-selectors-batch-d.md)
-- [ ] E13-S32 Screenshot selectors: ictergezocht, wearedevelopers, headfirst, planet_interim (docs/tickets/E13-S32-selectors-batch-e.md)
+- [x] E13-S32 Screenshot selectors: ictergezocht, wearedevelopers, headfirst, planet_interim (docs/tickets/E13-S32-selectors-batch-e.md)
+- [ ] E13-S36 Hide cookie overlays/apply forms before element screenshots (`screenshot_hide_selectors`); unblocks pro_act (docs/tickets/E13-S36-hide-overlays-before-screenshot.md)
 
 ### Part 3 — Screenshots (app)
 
