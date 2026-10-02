@@ -97,6 +97,7 @@ doesn't also touch `__init__.py` (nothing else in this batch does).
 Rules: story agents run ONLY the tests applicable to their change (never the full suite).
 Full-suite gates run by a SEPARATE fix-it subagent after S12, after S19 and after S34 (scraper: `uv run pytest` in scraper/; app: `uv run pytest tests/ -q` in app/), fixing failures and committing in the right repo.
 Follow-up (cleanup, after S12 gate): freelancer_com.py uses a `\x00AMP\x00` placeholder hack because `html_to_markdown` treats any `&` as HTML; replace with a `plain=True` option on the helper.
+OPEN QUESTION for owner (found in S17): headfirst has no public per-job page — source_url is the shared /vind-opdrachten overview (test pins this); the only per-ad link is the external striive.com brokerUrl, already stored as apply_url. Decide: keep overview, or use brokerUrl as source_url.
 Status log: tick each story here as it lands; gates done so far: (none)
 
 Scraper stories follow `docs/tickets/APPENDIX-A-standards.md` plus `docs/tickets/APPENDIX-B-scraper-standards.md`; app stories follow Appendix A only. The scraper stories touch the same adapter files several times (description, source URL, selector): run them one at a time, in the order listed. Keep any parallel subagent batch to 2 at a time, and only across scraper/app (never two scraper stories together).
@@ -136,7 +137,7 @@ S13 and S14 re-edit `working_nomads.py` / `stone_interim.py` (also touched by S0
 - [x] E13-S14 stone_interim: store the human ad URL, not the GetVacancy API endpoint (docs/tickets/E13-S14-stone-interim-source-url.md)
 - [x] E13-S15 flexvalue: investigate whether aanvragen.flexvalue.nl job URLs are application pages; fix or lock in (docs/tickets/E13-S15-flexvalue-source-url-investigation.md)
 - [x] E13-S16 Audit source URLs: arc_dev, circle8, djinni, freelancer_com (docs/tickets/E13-S16-source-url-audit-a.md)
-- [ ] E13-S17 Audit source URLs: freelancermap, guru, harveynash, headfirst (docs/tickets/E13-S17-source-url-audit-b.md)
+- [x] E13-S17 Audit source URLs: freelancermap, guru, harveynash, headfirst (docs/tickets/E13-S17-source-url-audit-b.md)
 - [ ] E13-S18 Audit source URLs: hero, iamexpat, ictergezocht, planet_interim, pro_act (docs/tickets/E13-S18-source-url-audit-c.md)
 - [ ] E13-S19 Audit source URLs: sevenstars, synprofs, tender_link, wearedevelopers (docs/tickets/E13-S19-source-url-audit-d.md)
 
