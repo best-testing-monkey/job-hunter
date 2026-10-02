@@ -60,3 +60,12 @@ def get_job_description(job_file: str | Path) -> str:
         description_lines = lines[description_start:next_section_start]
 
     return '\n'.join(description_lines).strip()
+
+
+def screenshot_path_for(job_file: str | Path) -> Path | None:
+    job = Path(job_file).resolve()
+    screenshots_dir = (job.parent.parent / "screenshots").resolve()
+    candidate = (screenshots_dir / f"{job.stem}.png").resolve()
+    if candidate.parent != screenshots_dir or candidate.suffix != ".png" or not candidate.is_file():
+        return None
+    return candidate

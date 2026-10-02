@@ -953,3 +953,75 @@ This is a great job posting.
     assert response.status_code == 200
     assert b'href="https://example.com/job1"' in response.data
     assert b"https://old.example/x" not in response.data
+
+
+PNG_BYTES = b"\x89PNG\r\n\x1a\n" + b"0" * 16
+
+
+def _screenshot_client(tmp_path, job_file_str=None, with_png=True):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    (tmp_path / "jobs").mkdir(exist_ok=True)
+    job_file = tmp_path / "jobs" / "a-1-x.md"
+    job_file.write_text("# x")
+    if with_png:
+        (tmp_path / "screenshots").mkdir(exist_ok=True)
+        (tmp_path / "screenshots" / "a-1-x.png").write_bytes(PNG_BYTES)
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "R", "# R")
+    db.upsert_match(
+        conn, resume_id=resume_id, job_file=job_file_str or str(job_file), title="x",
+        site="s", location="l", workplace="remote", source_url="https://e.com/1",
+        score=0.5, computed_at="2024-01-01T00:00:00",
+    )
+    match_id = db.get_matches(conn, resume_id)[0]["id"]
+    conn.close()
+    return app.test_client(), match_id
+
+
+def test_job_screenshot_served(tmp_path):
+    client, match_id = _screenshot_client(tmp_path)
+    response = client.get(f"/jobs/{match_id}/screenshot")
+    assert response.status_code == 200
+    assert response.content_type == "image/png"
+    assert response.data == PNG_BYTES
+
+
+def test_job_screenshot_missing_png_404(tmp_path):
+    client, match_id = _screenshot_client(tmp_path, with_png=False)
+    assert client.get(f"/jobs/{match_id}/screenshot").status_code == 404
+
+
+def test_job_screenshot_unknown_id_404(tmp_path):
+    client, _ = _screenshot_client(tmp_path)
+    assert client.get("/jobs/999999/screenshot").status_code == 404
+
+
+def test_job_screenshot_non_int_id_404(tmp_path):
+    client, _ = _screenshot_client(tmp_path)
+    assert client.get("/jobs/abc/screenshot").status_code == 404
+
+
+def test_job_screenshot_traversal_urls_404(tmp_path):
+    client, _ = _screenshot_client(tmp_path)
+    assert client.get("/jobs/1/screenshot/../../etc/passwd").status_code == 404
+    assert client.get("/jobs/%2e%2e%2f/screenshot").status_code == 404
+
+
+def test_job_screenshot_dotdot_job_file_never_serves_outside(tmp_path):
+    (tmp_path / "jobs").mkdir()
+    (tmp_path / "jobs" / "a-1-x.png").write_bytes(PNG_BYTES)
+    dotdot = f"{tmp_path}/jobs/../jobs/a-1-x.md"
+    client, match_id = _screenshot_client(tmp_path, job_file_str=dotdot, with_png=False)
+    assert client.get(f"/jobs/{match_id}/screenshot").status_code == 404
+
+
+def test_job_screenshot_symlink_escape_404(tmp_path):
+    client, match_id = _screenshot_client(tmp_path, with_png=False)
+    (tmp_path / "screenshots").mkdir()
+    outside = tmp_path / "outside.png"
+    outside.write_bytes(PNG_BYTES)
+    (tmp_path / "screenshots" / "a-1-x.png").symlink_to(outside)
+    assert client.get(f"/jobs/{match_id}/screenshot").status_code == 404

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from webapp.jobs import parse_job_file, site_name_for, get_job_description, render_description_html
+from webapp.jobs import parse_job_file, site_name_for, get_job_description, render_description_html, screenshot_path_for
 
 
 def test_parse_job_file_and_site_name():
@@ -128,3 +128,38 @@ def test_get_job_description_includes_subheadings(tmp_path):
     assert "more text" in description
     assert "Scrape note" not in description
     assert "note text" not in description
+
+
+def _job_layout(tmp_path):
+    (tmp_path / "jobs").mkdir()
+    job = tmp_path / "jobs" / "a-1-x.md"
+    job.write_text("# x")
+    return job
+
+
+def test_screenshot_path_for_returns_existing_png(tmp_path):
+    job = _job_layout(tmp_path)
+    (tmp_path / "screenshots").mkdir()
+    png = tmp_path / "screenshots" / "a-1-x.png"
+    png.write_bytes(b"x")
+    assert screenshot_path_for(job) == png.resolve()
+
+
+def test_screenshot_path_for_none_when_png_absent(tmp_path):
+    job = _job_layout(tmp_path)
+    (tmp_path / "screenshots").mkdir()
+    assert screenshot_path_for(job) is None
+
+
+def test_screenshot_path_for_none_when_screenshots_dir_absent(tmp_path):
+    job = _job_layout(tmp_path)
+    assert screenshot_path_for(job) is None
+
+
+def test_screenshot_path_for_none_when_symlink_escapes(tmp_path):
+    job = _job_layout(tmp_path)
+    (tmp_path / "screenshots").mkdir()
+    outside = tmp_path / "outside.png"
+    outside.write_bytes(b"x")
+    (tmp_path / "screenshots" / "a-1-x.png").symlink_to(outside)
+    assert screenshot_path_for(job) is None

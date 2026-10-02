@@ -1,6 +1,6 @@
 import threading
 from datetime import datetime, timezone
-from flask import Blueprint, jsonify, render_template, g, current_app, request, redirect, url_for, abort
+from flask import Blueprint, jsonify, send_file, render_template, g, current_app, request, redirect, url_for, abort
 from webapp import db, matcher, jobs
 
 bp = Blueprint("main", __name__)
@@ -186,6 +186,17 @@ def job_detail(match_id):
         source=source_url,
         description_html=description_html,
     )
+
+
+@bp.route("/jobs/<int:match_id>/screenshot", methods=["GET"])
+def job_screenshot(match_id):
+    match = db.get_match(get_db(), match_id)
+    if match is None:
+        abort(404)
+    path = jobs.screenshot_path_for(match["job_file"])
+    if path is None:
+        abort(404)
+    return send_file(path, mimetype="image/png")
 
 
 @bp.route("/resumes", methods=["POST"])
