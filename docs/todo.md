@@ -102,6 +102,7 @@ NOTE (S18): pro_act posting `pro_act-8681-open-sollicitatie-2026` is an open-app
 NOTE (S19): tender_link stored URL is a human ad page that 301-redirects to a longer SEO-slug canonical; works for users, left as is.
 FOLLOW-UP (S28): pro_act has NO screenshot_selector (BLOCKED: apply form `div.contact-info` is a sibling of the ad text inside `div.content-wrapper`); hero is a gated/blurred teaser (live QA in S35). Idea: add an optional `screenshot_hide_selectors` adapter attribute (elements hidden via JS before the element screenshot) to unblock pro_act and clean up cookie banners/forms generally.
 LIVE-QA FLAGS (S29, check in S35): stone_interim selector BLOCKED (saved page is a client-rendered shell; find selector on the live page); harveynash `div.post-content` also holds a "Reageren" button + share icons; working_nomads uses `div.jd-desktop div.jd-description` (page renders description twice; viewport is 1280px wide in capture_element so desktop copy is visible).
+LIVE-QA FLAGS (S30): iamexpat selector is a hashed CSS-module class `div.BodyCenter_main__Sz_2E` (no stable wrapper; also captures alert signup/Similar jobs/Apply buttons; may break on site rebuild); sevenstars + circle8 show a Cookiebot overlay that must be dismissed/hidden before the element shot.
 Status log: tick each story here as it lands; gates done so far: (none)
 
 Scraper stories follow `docs/tickets/APPENDIX-A-standards.md` plus `docs/tickets/APPENDIX-B-scraper-standards.md`; app stories follow Appendix A only. The scraper stories touch the same adapter files several times (description, source URL, selector): run them one at a time, in the order listed. Keep any parallel subagent batch to 2 at a time, and only across scraper/app (never two scraper stories together).
@@ -159,7 +160,7 @@ S20 -> S22 -> S23 -> S24 -> S25 -> S26 -> S27 are a chain (S21 is independent of
 - [x] E13-S27 CLI: `screenshots --site X [--missing-only]` backfill command (docs/tickets/E13-S27-screenshots-cli.md)
 - [x] E13-S28 Screenshot selectors: pro_act, hero, flexvalue, synprofs (docs/tickets/E13-S28-selectors-batch-a.md)
 - [x] E13-S29 Screenshot selectors: stone_interim, tender_link, harveynash, working_nomads (docs/tickets/E13-S29-selectors-batch-b.md)
-- [ ] E13-S30 Screenshot selectors: sevenstars, circle8, iamexpat, djinni (docs/tickets/E13-S30-selectors-batch-c.md)
+- [x] E13-S30 Screenshot selectors: sevenstars, circle8, iamexpat, djinni (docs/tickets/E13-S30-selectors-batch-c.md)
 - [ ] E13-S31 Screenshot selectors: arc_dev, freelancer_com, freelancermap, guru (docs/tickets/E13-S31-selectors-batch-d.md)
 - [ ] E13-S32 Screenshot selectors: ictergezocht, wearedevelopers, headfirst, planet_interim (docs/tickets/E13-S32-selectors-batch-e.md)
 
