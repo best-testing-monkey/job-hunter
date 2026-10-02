@@ -90,3 +90,81 @@ doesn't also touch `__init__.py` (nothing else in this batch does).
 - [x] E12-S01 Reject blank/whitespace resume name or content; create redirects to the new resume (docs/tickets/E12-S01-resume-form-validation.md)
 - [x] E12-S02 Style the New/Edit resume forms and size the content textarea (docs/tickets/E12-S02-style-resume-forms.md)
 - [x] E12-S03 Add a dark-themed 404 error page (docs/tickets/E12-S03-styled-404-page.md)
+
+## Epic 13 — Scraper quality: readable descriptions, correct links, screenshots
+
+Scraper stories follow `docs/tickets/APPENDIX-A-standards.md` plus `docs/tickets/APPENDIX-B-scraper-standards.md`; app stories follow Appendix A only. The scraper stories touch the same adapter files several times (description, source URL, selector): run them one at a time, in the order listed. Keep any parallel subagent batch to 2 at a time, and only across scraper/app (never two scraper stories together).
+
+### Part 0 — Preserve existing scraper work
+
+E13-S01 must run first and needs the owner's attention: `scraper/` has a large UNCOMMITTED diff (47 modified files) that every later story builds on. Inspect it, ask if anything looks off, never discard.
+
+- [ ] E13-S01 Inspect and commit/preserve the uncommitted scraper changes first (scraper repo) (docs/tickets/E13-S01-commit-existing-scraper-changes.md)
+
+### Part 1 — Readable descriptions (scraper)
+
+S02 first; S03-S08 each touch different adapter files (+ their test files) but all touch the same adapters again in Parts 2 and 3 — run the whole epic's scraper stories sequentially, never two at once. S09 -> S10 (both end up editing `cli.py`, as do S25 and S27).
+
+- [ ] E13-S02 Add the shared `html_to_markdown` helper (core, unit-tested with fixtures) (docs/tickets/E13-S02-html-to-markdown-helper.md)
+- [ ] E13-S03 Migrate arc_dev, pro_act, synprofs descriptions to html_to_markdown (docs/tickets/E13-S03-descriptions-batch-a.md)
+- [ ] E13-S04 Migrate djinni, circle8, sevenstars descriptions to html_to_markdown (docs/tickets/E13-S04-descriptions-batch-b.md)
+- [ ] E13-S05 Migrate harveynash, tender_link, stone_interim, working_nomads descriptions to html_to_markdown (docs/tickets/E13-S05-descriptions-batch-c.md)
+- [ ] E13-S06 Migrate freelancer_com, freelancermap, hero descriptions to html_to_markdown (docs/tickets/E13-S06-descriptions-batch-d.md)
+- [ ] E13-S07 Migrate iamexpat, ictergezocht, wearedevelopers descriptions to html_to_markdown (docs/tickets/E13-S07-descriptions-batch-e.md)
+- [ ] E13-S08 Migrate flexvalue and guru descriptions to html_to_markdown (docs/tickets/E13-S08-descriptions-batch-f.md)
+- [ ] E13-S09 Add `core/rebuild.py`: regenerate jobs/*.md and DB rows from raw/ without network (docs/tickets/E13-S09-rebuild-from-raw-module.md)
+- [ ] E13-S10 Add the `rebuild --site X` CLI subcommand (regenerate markdown from raw/, no network) (docs/tickets/E13-S10-rebuild-cli.md)
+
+### Part 1 — Readable descriptions (app)
+
+Independent of the scraper stories (touches only `app/`, can run any time), but S11 -> S12 are sequential (`routes.py`/template are touched again by S33/S34).
+
+- [ ] E13-S11 App: add `markdown` dependency and `render_description_html` (escaped, sanitized); fix description extraction for `###` headings (docs/tickets/E13-S11-app-render-description-markdown.md)
+- [ ] E13-S12 App: render the description as styled Markdown on the job detail page (dark theme) (docs/tickets/E13-S12-app-job-detail-markdown-view.md)
+
+### Part 2 — Correct source URLs
+
+S13 and S14 re-edit `working_nomads.py` / `stone_interim.py` (also touched by S05 and S29): run after S05. S16-S19 re-edit adapters touched by S03-S08.
+
+- [ ] E13-S13 working_nomads: store the human ad URL, not the /job/go/<id>/ redirect (docs/tickets/E13-S13-working-nomads-source-url.md)
+- [ ] E13-S14 stone_interim: store the human ad URL, not the GetVacancy API endpoint (docs/tickets/E13-S14-stone-interim-source-url.md)
+- [ ] E13-S15 flexvalue: investigate whether aanvragen.flexvalue.nl job URLs are application pages; fix or lock in (docs/tickets/E13-S15-flexvalue-source-url-investigation.md)
+- [ ] E13-S16 Audit source URLs: arc_dev, circle8, djinni, freelancer_com (docs/tickets/E13-S16-source-url-audit-a.md)
+- [ ] E13-S17 Audit source URLs: freelancermap, guru, harveynash, headfirst (docs/tickets/E13-S17-source-url-audit-b.md)
+- [ ] E13-S18 Audit source URLs: hero, iamexpat, ictergezocht, planet_interim, pro_act (docs/tickets/E13-S18-source-url-audit-c.md)
+- [ ] E13-S19 Audit source URLs: sevenstars, synprofs, tender_link, wearedevelopers (docs/tickets/E13-S19-source-url-audit-d.md)
+
+### Part 3 — Screenshots (scraper)
+
+S20 -> S22 -> S23 -> S24 -> S25 -> S26 -> S27 are a chain (S21 is independent of S20-S23 but must precede S24 and S28+). Selector batches S28-S32 need S21 only but should run after the URL stories (they also edit the same adapters). `pipeline.py`: S24; `markdown_export.py`: S23; `cli.py`: S25/S27 (after S10).
+
+- [ ] E13-S20 Declare `playwright` (and `patchright`) as direct deps; verify a browser is available; document findings (docs/tickets/E13-S20-playwright-dependency-and-browser-findings.md)
+- [ ] E13-S21 Add optional `screenshot_selector` ClassVar to `SiteAdapter` (docs/tickets/E13-S21-adapter-screenshot-selector-attribute.md)
+- [ ] E13-S22 Add `core/screenshots.py`: `capture_element` (element-only PNG, never raises) and `browser_available` (docs/tickets/E13-S22-capture-element-screenshot.md)
+- [ ] E13-S23 markdown_export: optional `- Screenshot:` bullet and `set_screenshot_line` helper (docs/tickets/E13-S23-markdown-screenshot-line.md)
+- [ ] E13-S24 pipeline: capture a screenshot for each newly written job (failures never fail the scrape) (docs/tickets/E13-S24-pipeline-capture-screenshots.md)
+- [ ] E13-S25 CLI: `--screenshots-dir` / `--no-screenshots` on `scrape`; git-ignore `screenshots/` (docs/tickets/E13-S25-cli-scrape-screenshot-flags.md)
+- [ ] E13-S26 Add `core/screenshot_backfill.py`: capture screenshots for existing jobs/*.md (docs/tickets/E13-S26-screenshot-backfill-module.md)
+- [ ] E13-S27 CLI: `screenshots --site X [--missing-only]` backfill command (docs/tickets/E13-S27-screenshots-cli.md)
+- [ ] E13-S28 Screenshot selectors: pro_act, hero, flexvalue, synprofs (docs/tickets/E13-S28-selectors-batch-a.md)
+- [ ] E13-S29 Screenshot selectors: stone_interim, tender_link, harveynash, working_nomads (docs/tickets/E13-S29-selectors-batch-b.md)
+- [ ] E13-S30 Screenshot selectors: sevenstars, circle8, iamexpat, djinni (docs/tickets/E13-S30-selectors-batch-c.md)
+- [ ] E13-S31 Screenshot selectors: arc_dev, freelancer_com, freelancermap, guru (docs/tickets/E13-S31-selectors-batch-d.md)
+- [ ] E13-S32 Screenshot selectors: ictergezocht, wearedevelopers, headfirst, planet_interim (docs/tickets/E13-S32-selectors-batch-e.md)
+
+### Part 3 — Screenshots (app)
+
+S33 -> S34, after S12 (same `routes.py`/template/CSS). Independent of the scraper stories (they only read `scraper/screenshots/*.png` if present).
+
+- [ ] E13-S33 App: `GET /jobs/<id>/screenshot` serves the job's PNG safely (404 if missing) (docs/tickets/E13-S33-app-serve-screenshots.md)
+- [ ] E13-S34 App: collapsible screenshot section on job_detail.html (hidden when missing) (docs/tickets/E13-S34-app-show-screenshot.md)
+
+### Part 4 — Full re-scrape and QA
+
+Last. Live network, long-running; the only story that writes `scraper/jobs/`, `raw/`, `scraper.db`, `screenshots/`.
+
+- [ ] E13-S35 Full re-scrape + `screenshots --missing-only` backfill + verification runbook (live network) (docs/tickets/E13-S35-full-rescrape-and-qa-runbook.md)
+
+### Scraper repo note
+
+`scraper/` is a separate git repository with its own history. Epic 13 tickets that change code, tests, fixtures or `scraper/README.md` are committed in the SCRAPER repo (`git -C scraper commit`, message `E13-S<nn>: ...`). Tickets that change `app/` and everything under `docs/` (including ticking items in this file) are committed in the JOB-HUNTER repo. Generated outputs in `scraper/` (`jobs/`, `raw/`, `scraper.db`, `screenshots/`) are git-ignored and never committed. Story E13-S01 first commits the large pre-existing uncommitted scraper work; E13-S35 is the only one that writes the generated directories.
