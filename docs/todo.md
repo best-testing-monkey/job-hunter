@@ -111,7 +111,7 @@ E13-S01 must run first and needs the owner's attention: `scraper/` has a large U
 S02 first; S03-S08 each touch different adapter files (+ their test files) but all touch the same adapters again in Parts 2 and 3 — run the whole epic's scraper stories sequentially, never two at once. S09 -> S10 (both end up editing `cli.py`, as do S25 and S27).
 
 - [x] E13-S02 Add the shared `html_to_markdown` helper (core, unit-tested with fixtures) (docs/tickets/E13-S02-html-to-markdown-helper.md)
-- [ ] E13-S03 Migrate arc_dev, pro_act, synprofs descriptions to html_to_markdown (docs/tickets/E13-S03-descriptions-batch-a.md)
+- [x] E13-S03 Migrate arc_dev, pro_act, synprofs descriptions to html_to_markdown (docs/tickets/E13-S03-descriptions-batch-a.md)
 - [ ] E13-S04 Migrate djinni, circle8, sevenstars descriptions to html_to_markdown (docs/tickets/E13-S04-descriptions-batch-b.md)
 - [ ] E13-S05 Migrate harveynash, tender_link, stone_interim, working_nomads descriptions to html_to_markdown (docs/tickets/E13-S05-descriptions-batch-c.md)
 - [ ] E13-S06 Migrate freelancer_com, freelancermap, hero descriptions to html_to_markdown (docs/tickets/E13-S06-descriptions-batch-d.md)
