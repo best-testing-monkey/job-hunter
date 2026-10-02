@@ -148,7 +148,7 @@ S13 and S14 re-edit `working_nomads.py` / `stone_interim.py` (also touched by S0
 S20 -> S22 -> S23 -> S24 -> S25 -> S26 -> S27 are a chain (S21 is independent of S20-S23 but must precede S24 and S28+). Selector batches S28-S32 need S21 only but should run after the URL stories (they also edit the same adapters). `pipeline.py`: S24; `markdown_export.py`: S23; `cli.py`: S25/S27 (after S10).
 
 - [x] E13-S20 Declare `playwright` (and `patchright`) as direct deps; verify a browser is available; document findings (docs/tickets/E13-S20-playwright-dependency-and-browser-findings.md)
-- [ ] E13-S21 Add optional `screenshot_selector` ClassVar to `SiteAdapter` (docs/tickets/E13-S21-adapter-screenshot-selector-attribute.md)
+- [x] E13-S21 Add optional `screenshot_selector` ClassVar to `SiteAdapter` (docs/tickets/E13-S21-adapter-screenshot-selector-attribute.md)
 - [ ] E13-S22 Add `core/screenshots.py`: `capture_element` (element-only PNG, never raises) and `browser_available` (docs/tickets/E13-S22-capture-element-screenshot.md)
 - [ ] E13-S23 markdown_export: optional `- Screenshot:` bullet and `set_screenshot_line` helper (docs/tickets/E13-S23-markdown-screenshot-line.md)
 - [ ] E13-S24 pipeline: capture a screenshot for each newly written job (failures never fail the scrape) (docs/tickets/E13-S24-pipeline-capture-screenshots.md)
