@@ -132,7 +132,7 @@ Independent of the scraper stories (touches only `app/`, can run any time), but 
 
 S13 and S14 re-edit `working_nomads.py` / `stone_interim.py` (also touched by S05 and S29): run after S05. S16-S19 re-edit adapters touched by S03-S08.
 
-- [ ] E13-S13 working_nomads: store the human ad URL, not the /job/go/<id>/ redirect (docs/tickets/E13-S13-working-nomads-source-url.md)
+- [x] E13-S13 working_nomads: store the human ad URL, not the /job/go/<id>/ redirect (docs/tickets/E13-S13-working-nomads-source-url.md)
 - [ ] E13-S14 stone_interim: store the human ad URL, not the GetVacancy API endpoint (docs/tickets/E13-S14-stone-interim-source-url.md)
 - [ ] E13-S15 flexvalue: investigate whether aanvragen.flexvalue.nl job URLs are application pages; fix or lock in (docs/tickets/E13-S15-flexvalue-source-url-investigation.md)
 - [ ] E13-S16 Audit source URLs: arc_dev, circle8, djinni, freelancer_com (docs/tickets/E13-S16-source-url-audit-a.md)
