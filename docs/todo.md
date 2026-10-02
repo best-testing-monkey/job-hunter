@@ -96,6 +96,7 @@ doesn't also touch `__init__.py` (nothing else in this batch does).
 **GOAL (set 2026-10-02):** complete E13-S02..S35 via `/run-stories` with cheap subagents, one story at a time.
 Rules: story agents run ONLY the tests applicable to their change (never the full suite).
 Full-suite gates run by a SEPARATE fix-it subagent after S12, after S19 and after S34 (scraper: `uv run pytest` in scraper/; app: `uv run pytest tests/ -q` in app/), fixing failures and committing in the right repo.
+Follow-up (cleanup, after S12 gate): freelancer_com.py uses a `\x00AMP\x00` placeholder hack because `html_to_markdown` treats any `&` as HTML; replace with a `plain=True` option on the helper.
 Status log: tick each story here as it lands; gates done so far: (none)
 
 Scraper stories follow `docs/tickets/APPENDIX-A-standards.md` plus `docs/tickets/APPENDIX-B-scraper-standards.md`; app stories follow Appendix A only. The scraper stories touch the same adapter files several times (description, source URL, selector): run them one at a time, in the order listed. Keep any parallel subagent batch to 2 at a time, and only across scraper/app (never two scraper stories together).
@@ -114,7 +115,7 @@ S02 first; S03-S08 each touch different adapter files (+ their test files) but a
 - [x] E13-S03 Migrate arc_dev, pro_act, synprofs descriptions to html_to_markdown (docs/tickets/E13-S03-descriptions-batch-a.md)
 - [x] E13-S04 Migrate djinni, circle8, sevenstars descriptions to html_to_markdown (docs/tickets/E13-S04-descriptions-batch-b.md)
 - [x] E13-S05 Migrate harveynash, tender_link, stone_interim, working_nomads descriptions to html_to_markdown (docs/tickets/E13-S05-descriptions-batch-c.md)
-- [ ] E13-S06 Migrate freelancer_com, freelancermap, hero descriptions to html_to_markdown (docs/tickets/E13-S06-descriptions-batch-d.md)
+- [x] E13-S06 Migrate freelancer_com, freelancermap, hero descriptions to html_to_markdown (docs/tickets/E13-S06-descriptions-batch-d.md)
 - [ ] E13-S07 Migrate iamexpat, ictergezocht, wearedevelopers descriptions to html_to_markdown (docs/tickets/E13-S07-descriptions-batch-e.md)
 - [ ] E13-S08 Migrate flexvalue and guru descriptions to html_to_markdown (docs/tickets/E13-S08-descriptions-batch-f.md)
 - [ ] E13-S09 Add `core/rebuild.py`: regenerate jobs/*.md and DB rows from raw/ without network (docs/tickets/E13-S09-rebuild-from-raw-module.md)
