@@ -93,6 +93,11 @@ doesn't also touch `__init__.py` (nothing else in this batch does).
 
 ## Epic 13 — Scraper quality: readable descriptions, correct links, screenshots
 
+**GOAL (set 2026-10-02):** complete E13-S02..S35 via `/run-stories` with cheap subagents, one story at a time.
+Rules: story agents run ONLY the tests applicable to their change (never the full suite).
+Full-suite gates run by a SEPARATE fix-it subagent after S12, after S19 and after S34 (scraper: `uv run pytest` in scraper/; app: `uv run pytest tests/ -q` in app/), fixing failures and committing in the right repo.
+Status log: tick each story here as it lands; gates done so far: (none)
+
 Scraper stories follow `docs/tickets/APPENDIX-A-standards.md` plus `docs/tickets/APPENDIX-B-scraper-standards.md`; app stories follow Appendix A only. The scraper stories touch the same adapter files several times (description, source URL, selector): run them one at a time, in the order listed. Keep any parallel subagent batch to 2 at a time, and only across scraper/app (never two scraper stories together).
 
 ### Part 0 — Preserve existing scraper work
