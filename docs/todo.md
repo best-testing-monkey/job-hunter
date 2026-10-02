@@ -172,7 +172,7 @@ S20 -> S22 -> S23 -> S24 -> S25 -> S26 -> S27 are a chain (S21 is independent of
 
 S33 -> S34, after S12 (same `routes.py`/template/CSS). Independent of the scraper stories (they only read `scraper/screenshots/*.png` if present).
 
-- [ ] E13-S33 App: `GET /jobs/<id>/screenshot` serves the job's PNG safely (404 if missing) (docs/tickets/E13-S33-app-serve-screenshots.md)
+- [x] E13-S33 App: `GET /jobs/<id>/screenshot` serves the job's PNG safely (404 if missing) (docs/tickets/E13-S33-app-serve-screenshots.md)
 - [ ] E13-S34 App: collapsible screenshot section on job_detail.html (hidden when missing) (docs/tickets/E13-S34-app-show-screenshot.md)
 
 ### Part 4 — Full re-scrape and QA
