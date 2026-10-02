@@ -1025,3 +1025,102 @@ def test_job_screenshot_symlink_escape_404(tmp_path):
     outside.write_bytes(PNG_BYTES)
     (tmp_path / "screenshots" / "a-1-x.png").symlink_to(outside)
     assert client.get(f"/jobs/{match_id}/screenshot").status_code == 404
+
+
+def test_job_detail_with_screenshot(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    (tmp_path / "jobs").mkdir(exist_ok=True)
+    job_file = tmp_path / "jobs" / "a-1-x.md"
+    job_file.write_text("""# Software Engineer
+
+- Source: https://example.com/job1
+- Client: TechCorp
+- Location: San Francisco
+- Workplace: remote
+
+## Description
+
+This is a great job posting. You will work on exciting projects.
+""")
+
+    (tmp_path / "screenshots").mkdir(exist_ok=True)
+    (tmp_path / "screenshots" / "a-1-x.png").write_bytes(PNG_BYTES)
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
+    db.upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file=str(job_file),
+        title="Software Engineer",
+        site="TechCorp",
+        location="San Francisco",
+        workplace="remote",
+        source_url="https://example.com/job1",
+        score=0.95,
+        computed_at="2024-01-01T00:00:00",
+    )
+    matches = db.get_matches(conn, resume_id)
+    match_id = matches[0]["id"]
+    conn.close()
+
+    response = client.get(f"/jobs/{match_id}")
+    assert response.status_code == 200
+    assert b'<details class="job-screenshot">' in response.data
+    assert b"<summary>Screenshot of original posting</summary>" in response.data
+    assert b'<img src="/jobs/' in response.data
+    assert b'/screenshot" alt="Screenshot of the original job posting" loading="lazy">' in response.data
+    assert b"View original posting" in response.data
+
+
+def test_job_detail_without_screenshot(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    (tmp_path / "jobs").mkdir(exist_ok=True)
+    job_file = tmp_path / "jobs" / "b-2-y.md"
+    job_file.write_text("""# Product Manager
+
+- Source: https://example.com/job2
+- Client: StartupCorp
+- Location: Remote
+- Workplace: remote
+
+## Description
+
+Lead our product strategy.
+""")
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
+    db.upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file=str(job_file),
+        title="Product Manager",
+        site="StartupCorp",
+        location="Remote",
+        workplace="remote",
+        source_url="https://example.com/job2",
+        score=0.88,
+        computed_at="2024-01-01T00:00:00",
+    )
+    matches = db.get_matches(conn, resume_id)
+    match_id = matches[0]["id"]
+    conn.close()
+
+    response = client.get(f"/jobs/{match_id}")
+    assert response.status_code == 200
+    assert b"job-screenshot" not in response.data
+    assert b"/screenshot" not in response.data
+    assert b"Product Manager" in response.data
+    assert b"Lead our product strategy" in response.data
+    assert b"View original posting" in response.data

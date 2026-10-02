@@ -180,3 +180,14 @@ button:active {
 .job-description strong {
   font-weight: 600;
 }
+
+.job-screenshot summary {
+  cursor: pointer;
+  color: var(--accent);
+}
+
+.job-screenshot img {
+  max-width: 100%;
+  border: 1px solid var(--text-muted);
+  margin-top: 1rem;
+}

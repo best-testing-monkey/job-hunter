@@ -185,6 +185,8 @@ def job_detail(match_id):
         workplace=match["workplace"],
         source=source_url,
         description_html=description_html,
+        match_id=match_id,
+        has_screenshot=jobs.screenshot_path_for(match["job_file"]) is not None,
     )
 
 
