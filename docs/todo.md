@@ -119,7 +119,7 @@ S02 first; S03-S08 each touch different adapter files (+ their test files) but a
 - [x] E13-S07 Migrate iamexpat, ictergezocht, wearedevelopers descriptions to html_to_markdown (docs/tickets/E13-S07-descriptions-batch-e.md)
 - [x] E13-S08 Migrate flexvalue and guru descriptions to html_to_markdown (docs/tickets/E13-S08-descriptions-batch-f.md)
 - [x] E13-S09 Add `core/rebuild.py`: regenerate jobs/*.md and DB rows from raw/ without network (docs/tickets/E13-S09-rebuild-from-raw-module.md)
-- [ ] E13-S10 Add the `rebuild --site X` CLI subcommand (regenerate markdown from raw/, no network) (docs/tickets/E13-S10-rebuild-cli.md)
+- [x] E13-S10 Add the `rebuild --site X` CLI subcommand (regenerate markdown from raw/, no network) (docs/tickets/E13-S10-rebuild-cli.md)
 
 ### Part 1 — Readable descriptions (app)
 
