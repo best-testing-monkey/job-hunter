@@ -106,6 +106,7 @@ LIVE-QA FLAGS (S30): iamexpat selector is a hashed CSS-module class `div.BodyCen
 LIVE-QA FLAGS (S31): guru element is truncated in saved HTML ("... Show more") — full text may need a live click/expand; arc_dev check tab visibility live; no overlays seen in saved HTML for arc_dev/freelancer_com/freelancermap/guru.
 LIVE-QA FLAGS (S32): ictergezocht fixture has CookieYes overlay `#cookieyes-banner`; all 50 raw ictergezocht pages are Cloudflare challenge pages (only 1 fixture verifiable); wearedevelopers selector uses `:has()` (needs Chromium>=105, fine); headfirst + planet_interim intentionally None (no description scraped).
 STORY ADDED: E13-S36 (overlay/form hiding) runs after S32, before gate 3 + S33/S34.
+Gates done: GATE-1 (after S12), GATE-2 (after S19), GATE-3 (after S34, scraper 424x2 / app 94). Only S35 (live re-scrape) remains.
 Status log: tick each story here as it lands; gates done so far: (none)
 
 Scraper stories follow `docs/tickets/APPENDIX-A-standards.md` plus `docs/tickets/APPENDIX-B-scraper-standards.md`; app stories follow Appendix A only. The scraper stories touch the same adapter files several times (description, source URL, selector): run them one at a time, in the order listed. Keep any parallel subagent batch to 2 at a time, and only across scraper/app (never two scraper stories together).
