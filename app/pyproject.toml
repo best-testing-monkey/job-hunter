@@ -5,6 +5,7 @@ description = "Job hunter web application"
 requires-python = ">=3.10"
 dependencies = [
     "flask",
+    "markdown>=3.10.3",
 ]
 
 [dependency-groups]
