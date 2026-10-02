@@ -135,7 +135,7 @@ S13 and S14 re-edit `working_nomads.py` / `stone_interim.py` (also touched by S0
 - [x] E13-S13 working_nomads: store the human ad URL, not the /job/go/<id>/ redirect (docs/tickets/E13-S13-working-nomads-source-url.md)
 - [x] E13-S14 stone_interim: store the human ad URL, not the GetVacancy API endpoint (docs/tickets/E13-S14-stone-interim-source-url.md)
 - [x] E13-S15 flexvalue: investigate whether aanvragen.flexvalue.nl job URLs are application pages; fix or lock in (docs/tickets/E13-S15-flexvalue-source-url-investigation.md)
-- [ ] E13-S16 Audit source URLs: arc_dev, circle8, djinni, freelancer_com (docs/tickets/E13-S16-source-url-audit-a.md)
+- [x] E13-S16 Audit source URLs: arc_dev, circle8, djinni, freelancer_com (docs/tickets/E13-S16-source-url-audit-a.md)
 - [ ] E13-S17 Audit source URLs: freelancermap, guru, harveynash, headfirst (docs/tickets/E13-S17-source-url-audit-b.md)
 - [ ] E13-S18 Audit source URLs: hero, iamexpat, ictergezocht, planet_interim, pro_act (docs/tickets/E13-S18-source-url-audit-c.md)
 - [ ] E13-S19 Audit source URLs: sevenstars, synprofs, tender_link, wearedevelopers (docs/tickets/E13-S19-source-url-audit-d.md)
