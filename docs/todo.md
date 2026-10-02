@@ -180,7 +180,7 @@ S33 -> S34, after S12 (same `routes.py`/template/CSS). Independent of the scrape
 
 Last. Live network, long-running; the only story that writes `scraper/jobs/`, `raw/`, `scraper.db`, `screenshots/`.
 
-- [ ] E13-S35 Full re-scrape + `screenshots --missing-only` backfill + verification runbook (live network) (docs/tickets/E13-S35-full-rescrape-and-qa-runbook.md)
+- [x] E13-S35 Full re-scrape + `screenshots --missing-only` backfill + verification runbook (live network) (docs/tickets/E13-S35-full-rescrape-and-qa-runbook.md)
 
 ### Scraper repo note
 
