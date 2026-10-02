@@ -113,7 +113,7 @@ S02 first; S03-S08 each touch different adapter files (+ their test files) but a
 - [x] E13-S02 Add the shared `html_to_markdown` helper (core, unit-tested with fixtures) (docs/tickets/E13-S02-html-to-markdown-helper.md)
 - [x] E13-S03 Migrate arc_dev, pro_act, synprofs descriptions to html_to_markdown (docs/tickets/E13-S03-descriptions-batch-a.md)
 - [x] E13-S04 Migrate djinni, circle8, sevenstars descriptions to html_to_markdown (docs/tickets/E13-S04-descriptions-batch-b.md)
-- [ ] E13-S05 Migrate harveynash, tender_link, stone_interim, working_nomads descriptions to html_to_markdown (docs/tickets/E13-S05-descriptions-batch-c.md)
+- [x] E13-S05 Migrate harveynash, tender_link, stone_interim, working_nomads descriptions to html_to_markdown (docs/tickets/E13-S05-descriptions-batch-c.md)
 - [ ] E13-S06 Migrate freelancer_com, freelancermap, hero descriptions to html_to_markdown (docs/tickets/E13-S06-descriptions-batch-d.md)
 - [ ] E13-S07 Migrate iamexpat, ictergezocht, wearedevelopers descriptions to html_to_markdown (docs/tickets/E13-S07-descriptions-batch-e.md)
 - [ ] E13-S08 Migrate flexvalue and guru descriptions to html_to_markdown (docs/tickets/E13-S08-descriptions-batch-f.md)
