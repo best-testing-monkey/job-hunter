@@ -99,7 +99,7 @@ Scraper stories follow `docs/tickets/APPENDIX-A-standards.md` plus `docs/tickets
 
 E13-S01 must run first and needs the owner's attention: `scraper/` has a large UNCOMMITTED diff (47 modified files) that every later story builds on. Inspect it, ask if anything looks off, never discard.
 
-- [ ] E13-S01 Inspect and commit/preserve the uncommitted scraper changes first (scraper repo) (docs/tickets/E13-S01-commit-existing-scraper-changes.md)
+- [x] E13-S01 Inspect and commit/preserve the uncommitted scraper changes first (scraper repo) (docs/tickets/E13-S01-commit-existing-scraper-changes.md)
 
 ### Part 1 — Readable descriptions (scraper)
 
