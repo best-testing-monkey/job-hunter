@@ -118,7 +118,7 @@ S02 first; S03-S08 each touch different adapter files (+ their test files) but a
 - [x] E13-S06 Migrate freelancer_com, freelancermap, hero descriptions to html_to_markdown (docs/tickets/E13-S06-descriptions-batch-d.md)
 - [x] E13-S07 Migrate iamexpat, ictergezocht, wearedevelopers descriptions to html_to_markdown (docs/tickets/E13-S07-descriptions-batch-e.md)
 - [x] E13-S08 Migrate flexvalue and guru descriptions to html_to_markdown (docs/tickets/E13-S08-descriptions-batch-f.md)
-- [ ] E13-S09 Add `core/rebuild.py`: regenerate jobs/*.md and DB rows from raw/ without network (docs/tickets/E13-S09-rebuild-from-raw-module.md)
+- [x] E13-S09 Add `core/rebuild.py`: regenerate jobs/*.md and DB rows from raw/ without network (docs/tickets/E13-S09-rebuild-from-raw-module.md)
 - [ ] E13-S10 Add the `rebuild --site X` CLI subcommand (regenerate markdown from raw/, no network) (docs/tickets/E13-S10-rebuild-cli.md)
 
 ### Part 1 — Readable descriptions (app)
@@ -126,7 +126,7 @@ S02 first; S03-S08 each touch different adapter files (+ their test files) but a
 Independent of the scraper stories (touches only `app/`, can run any time), but S11 -> S12 are sequential (`routes.py`/template are touched again by S33/S34).
 
 - [x] E13-S11 App: add `markdown` dependency and `render_description_html` (escaped, sanitized); fix description extraction for `###` headings (docs/tickets/E13-S11-app-render-description-markdown.md)
-- [ ] E13-S12 App: render the description as styled Markdown on the job detail page (dark theme) (docs/tickets/E13-S12-app-job-detail-markdown-view.md)
+- [x] E13-S12 App: render the description as styled Markdown on the job detail page (dark theme) (docs/tickets/E13-S12-app-job-detail-markdown-view.md)
 
 ### Part 2 — Correct source URLs
 
