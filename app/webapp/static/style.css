@@ -150,3 +150,33 @@ button:hover {
 button:active {
   opacity: 0.8;
 }
+
+.job-description {
+  max-width: 70ch;
+}
+
+.job-description p {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.job-description h3,
+.job-description h4 {
+  margin-top: 1rem;
+  margin-bottom: 0.75rem;
+  color: var(--text-primary);
+}
+
+.job-description ul,
+.job-description ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.job-description li {
+  margin-bottom: 0.5rem;
+}
+
+.job-description strong {
+  font-weight: 600;
+}

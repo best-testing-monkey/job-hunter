@@ -174,6 +174,8 @@ def job_detail(match_id):
 
     job_info = jobs.parse_job_file(match["job_file"])
     description = jobs.get_job_description(match["job_file"])
+    description_html = jobs.render_description_html(description)
+    source_url = job_info.get("source") or match["source_url"]
 
     return render_template(
         "job_detail.html",
@@ -181,8 +183,8 @@ def job_detail(match_id):
         site=match["site"],
         location=match["location"],
         workplace=match["workplace"],
-        source=match["source_url"],
-        description=description,
+        source=source_url,
+        description_html=description_html,
     )
 
 

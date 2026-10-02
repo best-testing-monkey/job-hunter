@@ -812,3 +812,144 @@ def test_job_detail_not_found(tmp_path):
 
     response = client.get("/jobs/999999")
     assert response.status_code == 404
+
+
+def test_job_detail_renders_markdown(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    job_file = tmp_path / "job1.md"
+    job_file.write_text("""# Software Engineer
+
+- Source: https://example.com/job1
+- Client: TechCorp
+- Location: San Francisco
+- Workplace: remote
+
+## Description
+
+### Duties
+
+- Write tests
+- Fix bugs
+
+**Must** know Python
+""")
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
+    db.upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file=str(job_file),
+        title="Software Engineer",
+        site="TechCorp",
+        location="San Francisco",
+        workplace="remote",
+        source_url="https://old.example/x",
+        score=0.95,
+        computed_at="2024-01-01T00:00:00",
+    )
+    matches = db.get_matches(conn, resume_id)
+    match_id = matches[0]["id"]
+    conn.close()
+
+    response = client.get(f"/jobs/{match_id}")
+    assert response.status_code == 200
+    assert b"<h3>Duties</h3>" in response.data
+    assert b"<li>Write tests</li>" in response.data
+    assert b"<li>Fix bugs</li>" in response.data
+    assert b"<strong>Must</strong>" in response.data
+    assert b'<div class="job-description">' in response.data
+    assert b"<pre" not in response.data
+
+
+def test_job_detail_escapes_html(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    job_file = tmp_path / "job1.md"
+    job_file.write_text("""# Software Engineer
+
+- Source: https://example.com/job1
+- Client: TechCorp
+- Location: San Francisco
+- Workplace: remote
+
+## Description
+
+<script>alert(1)</script>
+""")
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
+    db.upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file=str(job_file),
+        title="Software Engineer",
+        site="TechCorp",
+        location="San Francisco",
+        workplace="remote",
+        source_url="https://example.com/job1",
+        score=0.95,
+        computed_at="2024-01-01T00:00:00",
+    )
+    matches = db.get_matches(conn, resume_id)
+    match_id = matches[0]["id"]
+    conn.close()
+
+    response = client.get(f"/jobs/{match_id}")
+    assert response.status_code == 200
+    assert b"&lt;script&gt;" in response.data
+    assert b"<script>alert(1)</script>" not in response.data
+
+
+def test_job_detail_uses_source_from_job_file(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    job_file = tmp_path / "job1.md"
+    job_file.write_text("""# Software Engineer
+
+- Source: https://example.com/job1
+- Client: TechCorp
+- Location: San Francisco
+- Workplace: remote
+
+## Description
+
+This is a great job posting.
+""")
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
+    db.upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file=str(job_file),
+        title="Software Engineer",
+        site="TechCorp",
+        location="San Francisco",
+        workplace="remote",
+        source_url="https://old.example/x",
+        score=0.95,
+        computed_at="2024-01-01T00:00:00",
+    )
+    matches = db.get_matches(conn, resume_id)
+    match_id = matches[0]["id"]
+    conn.close()
+
+    response = client.get(f"/jobs/{match_id}")
+    assert response.status_code == 200
+    assert b'href="https://example.com/job1"' in response.data
+    assert b"https://old.example/x" not in response.data

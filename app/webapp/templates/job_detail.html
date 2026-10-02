@@ -20,7 +20,7 @@
     </table>
 
     <h2>Description</h2>
-    <pre style="white-space: pre-wrap; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;">{{ description }}</pre>
+    <div class="job-description">{{ description_html|safe }}</div>
 
     <a href="{{ source }}" class="btn-accent" target="_blank">View original posting</a>
 </main>
