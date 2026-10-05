@@ -271,3 +271,45 @@ Scraper repo note: S01-S05 commit in the SCRAPER repo (`E15-S<nn>: ...`); S06-S1
 ### Part 3 — QA
 
 - [x] E15-S10 Drive the real app on port 5001 with stale fixtures (0/1/2/3 days), `stale-sync` on copies, record `docs/e15-qa-results.md` (docs/tickets/E15-S10-qa-and-record-results.md)
+
+## Epic 16 — Delisted-posting detection, fade-in settle wait, thin-screenshot skip, publish
+
+**GOAL (set 2026-10-05):** complete E16-S01..S17 via `/run-stories` with cheap subagents, one story at a time. Owner request: "Detect delisted postings from the detail fetch, a 404 or a redirect (to a non related page); wait for fade-in animations before capturing, and re-take the harveynash blanks; skip captures shorter than about 100 pixels, which would drop the hero strips; commit and push all changes." Derived from the Follow-ups in `docs/e14-qa-results.md`.
+Rules: story agents run ONLY the tests applicable to their change (never the full suite). Scraper stories follow `docs/tickets/APPENDIX-A-standards.md`, `APPENDIX-B-scraper-standards.md` and `APPENDIX-C-screenshot-fix-standards.md`. Never two scraper stories at once.
+GATE-6 (full suites by a SEPARATE fix-it subagent: `uv run pytest` in `scraper/`, `uv run pytest tests/ -q` in `app/`; fix failures and commit in the right repo): after E16-S15 (the last code story). E16-S16 is live-network QA with the owner's OK already given (including re-taking the harveynash blanks): backup first, ONE heavy process at a time in the background with logs, `uptime` load below 8 before each heavy step, owner's app on :5000 untouched, never `--ignore-robots` / `--include-stale`. E16-S17 is a runbook (scrub personal data, commit, push), no code; the one full scraper suite run allowed there is part of its verification.
+Design (verified against the code and the scrapling source):
+- Scrapling `Fetcher.get` / `StealthyFetcher.fetch` return a `Response` with `.status`, `.url` (FINAL url after redirects) and `.body`; a 404 does not raise. So detection costs nothing extra. Detail fetches are made in `pipeline.run_site` (`fetch_page(adapter.fetch_strategy, stub.detail_url)`), not inside adapters.
+- Detection: `fetch_page(strategy, url, *, gone_check=None, **kwargs)` keeps its old behaviour when `gone_check` is None (existing tests and listing fetches unaffected); with a `GoneCheck` it raises `PostingGone` (class in `sites/base.py`) for HTTP 404/410, an unrelated redirect, or a `<title>`/`<h1>` soft-404 marker. Pure helpers live in the new `core/gone.py` (`is_unrelated_redirect`, `title_has_gone_marker`, `gone_reason`). "Unrelated redirect" = same host, different normalised path, final path lacks the listing id AND is `/` or equals/ends with one of the adapter's `listing_paths`; only when an adapter declares no `listing_paths` and an id is known, a path with fewer segments also counts (a bare shorter-path rule would stale live working_nomads postings: `/job/go/<id>/` -> `/jobs/<slug>`). Off-site redirects are never "gone". Markers (`gone_markers`) match title/h1 only.
+- Marking: a stub whose fetch raises `PostingGone` is skipped (no upsert, no markdown, no screenshot), counted in `gone`; the existing end-of-run logic then marks it stale with today's date and the `- Stale since:` bullet (an already-stale posting keeps its date). Safety valve: 10 or more gone postings that are more than half of `seen` are treated as an outage/block, are NOT staled (`JobRepository.touch_seen`), counted in `gone_suppressed`.
+- Screenshots: `capture_element` gets `gone_check` (404/410/unrelated redirect/title marker -> None = skipped on purpose, counted `skipped_blocked`/`screenshots_skipped`), `min_height` (default 100, from `SiteAdapter.screenshot_min_height`; checked on the element bounding box and again on the PNG header; None, no file), and a settle step before the shot: scroll the target into view (AOS only fades in when scrolled into view), then wait up to 3 s for the target and all ancestors to reach opacity 1 with no running finite ancestor/self animation, then 100 ms; a timeout never fails the capture.
+- Prune: `screenshots --prune-small [--min-height 100] [--site X ...] --move-to DIR [--dry-run]` moves PNGs shorter than the threshold into DIR (never deletes) and removes their `- Screenshot:` bullet (`remove_screenshot_line`).
+- Per-adapter `listing_paths` for working_nomads, circle8, hero, harveynash, sevenstars, synprofs, pro_act; `gone_markers` only for sevenstars ("job not found", from the owner's QA text; no saved page contains a not-found title/h1 for any of the eight sites, so everything else relies on the generic HTTP rule). stone_interim (JSON API detail) stays generic.
+Same-file chains (strictly sequential): `screenshots.py` S01 -> S02 -> S12 (`test_screenshots.py` likewise); `pipeline.py` S04 -> S11 -> S13; `base.py` S03 -> S09; `screenshot_backfill.py` S03 -> S13; `test_pipeline.py` S04, S11, S13 (and S09 runs it); `test_screenshot_backfill.py` S03 -> S13; `cli.py` S07; `markdown_export.py` S05; `db.py` S10; adapters S14 -> S15. Dependencies: S03 needs S02; S06 needs S02 and S05; S07 needs S06; S09 needs S03 and S08; S11 needs S04, S09, S10; S12 needs S02 and S08; S13 needs S11 and S12; S14 and S15 need S09; GATE-6 needs S15; S16 needs GATE-6; S17 needs S16.
+Scraper repo note: S01-S15 commit in the SCRAPER repo (`E16-S<nn>: ...`); S16 and `docs/` commit in the JOB-HUNTER repo; S17 commits in all three repos as described in its ticket (job-hunter has NO remote: nothing is pushed there, report it).
+
+### Part 1 — Screenshot quality (settle wait, minimum height, prune)
+
+- [ ] E16-S01 `capture_element` settle step: scroll into view, wait for opacity 1 and finished ancestor animations (docs/tickets/E16-S01-capture-settle-wait.md)
+- [ ] E16-S02 `capture_element(min_height=100)`: skip captures shorter than the threshold (docs/tickets/E16-S02-capture-min-height-skip.md)
+- [ ] E16-S03 `SiteAdapter.screenshot_min_height` and the backfill passes it (docs/tickets/E16-S03-adapter-min-height-and-backfill.md)
+- [ ] E16-S04 pipeline passes `screenshot_min_height` (docs/tickets/E16-S04-pipeline-pass-min-height.md)
+- [ ] E16-S05 markdown_export: `remove_screenshot_line` (docs/tickets/E16-S05-markdown-remove-screenshot-line.md)
+- [ ] E16-S06 `core/screenshot_prune.py`: move thin PNGs aside, drop their markdown line (docs/tickets/E16-S06-screenshot-prune-module.md)
+- [ ] E16-S07 CLI: `screenshots --prune-small` (docs/tickets/E16-S07-cli-prune-small.md)
+
+### Part 2 — Delisted-posting detection
+
+- [ ] E16-S08 `core/gone.py`: pure `is_unrelated_redirect`, `title_has_gone_marker`, `gone_reason`, `GoneCheck` (docs/tickets/E16-S08-gone-helpers.md)
+- [ ] E16-S09 `PostingGone`, adapter `listing_paths`/`gone_markers`, opt-in `gone_check` in `fetch_page` (docs/tickets/E16-S09-base-postinggone-and-fetch.md)
+- [ ] E16-S10 `JobRepository.touch_seen` (safety valve support) (docs/tickets/E16-S10-db-touch-seen.md)
+- [ ] E16-S11 pipeline: a gone detail page marks the posting stale, `gone` counter, safety valve (docs/tickets/E16-S11-pipeline-handle-postinggone.md)
+- [ ] E16-S12 `capture_element` skips gone pages (404/410/unrelated redirect/title marker) (docs/tickets/E16-S12-capture-skip-gone-pages.md)
+- [ ] E16-S13 pipeline and backfill pass `GoneCheck` to `capture_element` (docs/tickets/E16-S13-pass-gone-check-to-capture.md)
+- [ ] E16-S14 Gone settings: working_nomads, circle8, hero, harveynash (docs/tickets/E16-S14-gone-settings-batch-a.md)
+- [ ] E16-S15 Gone settings: sevenstars, synprofs, pro_act, stone_interim (docs/tickets/E16-S15-gone-settings-batch-b.md)
+- [ ] GATE-6 full-suite gate agent (scraper + app) after E16-S15
+
+### Part 3 — QA and publish
+
+- [ ] E16-S16 Live QA: prune thin PNGs, per-site scrape for `gone`, re-take harveynash/hero, record `docs/e16-qa-results.md` (live network) (docs/tickets/E16-S16-qa-and-record-results.md)
+- [ ] E16-S17 Publish runbook: scrub personal data from unpushed scraper history, commit resume-matcher sources, push scraper + resume-matcher, commit job-hunter locally (docs/tickets/E16-S17-publish-scrub-and-push.md)
