@@ -98,3 +98,27 @@ def test_save_settings_and_validation(tmp_path):
     assert r.status_code == 302
     assert "SpainJob" in _page(client, rid)
     assert client.post("/resumes/999/travel", data={}).status_code == 404
+
+
+def test_list_page_counts_match_detail(tmp_path):
+    import re, json
+    client, rid = _setup(tmp_path)
+    def list_count(q=""):
+        html = client.get("/" + q).data.decode()
+        data = json.loads(re.search(r'id="resume-match-data">(.*?)</script>', html, re.S).group(1))
+        return len(data[str(rid)])
+    detail_visible = _page(client, rid).count('href="/jobs/')
+    assert list_count() == detail_visible == 3
+    assert list_count("?travel_filter=0") == 4
+
+
+def test_failed_save_rerenders_matches_and_form(tmp_path):
+    client, rid = _setup(tmp_path)
+    r = client.post(f"/resumes/{rid}/travel",
+                    data={"home_city": "Almere", "max_travel_minutes": "abc", "travel_mode": "transit"})
+    html = r.data.decode()
+    assert r.status_code == 400
+    assert "whole number" in html
+    assert "NearJob" in html and "No matches yet" not in html
+    assert 'value="abc"' in html and 'value="Almere"' in html
+    assert '<option value="transit" selected>' in html

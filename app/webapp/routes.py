@@ -33,14 +33,18 @@ def theme_preview():
 @bp.route("/", methods=["GET"])
 def resume_list():
     conn = get_db()
+    travel_filter = request.args.get("travel_filter", "1") != "0"
     resumes = db.list_resumes(conn)
     resume_match_data = {}
     for resume in resumes:
-        matches = db.get_matches(conn, resume["id"])
+        live = [
+            m for m in db.get_matches(conn, resume["id"])
+            if jobs.job_stale_state(m["job_file"])[0] == "live"
+        ]
+        rows, _, _ = travel.apply_travel(resume, live, travel_filter)
         resume_match_data[resume["id"]] = [
             {"score": m["score"], "status": m["status"], "job_posted": m["job_posted"]}
-            for m in matches
-            if jobs.job_stale_state(m["job_file"])[0] == "live"
+            for m, _info in rows
         ]
     return render_template("resumes.html", resumes=resumes, resume_match_data=resume_match_data)
 
@@ -56,15 +60,19 @@ def resume_detail(resume_id):
     resume = db.get_resume(conn, resume_id)
     if resume is None:
         abort(404)
+    return _render_detail(conn, resume, request.args.get("travel_filter", "1") != "0",
+                          travel_error=request.args.get("travel_error"))
+
+
+def _render_detail(conn, resume, travel_filter, status=200, **extra):
     live_matches = []
     stale_matches = []
-    for m in db.get_matches(conn, resume_id):
+    for m in db.get_matches(conn, resume["id"]):
         state, since = jobs.job_stale_state(m["job_file"])
         if state == "live":
             live_matches.append(m)
         elif state == "stale":
             stale_matches.append({"match": m, "since": since.isoformat()})
-    travel_filter = request.args.get("travel_filter", "1") != "0"
     live_rows, hidden_count, travel_warning = travel.apply_travel(resume, live_matches, travel_filter)
     stale_rows, _, _ = travel.apply_travel(resume, [s["match"] for s in stale_matches], False)
     stale_matches = [
@@ -81,8 +89,8 @@ def resume_detail(resume_id):
         travel_warning=travel_warning,
         travel_filter=travel_filter,
         travel_active=travel_active,
-        travel_error=request.args.get("travel_error"),
-    )
+        **extra,
+    ), status
 
 
 @bp.route("/resumes/<int:resume_id>/travel", methods=["POST"])
@@ -108,20 +116,8 @@ def save_travel_settings(resume_id):
         else:
             max_min = int(max_raw)
     if error:
-        return render_template(
-            "resume_detail.html",
-            resume=resume,
-            live_matches=[],
-            stale_matches=[],
-            hidden_count=0,
-            travel_warning=None,
-            travel_filter=True,
-            travel_active=False,
-            travel_error=error,
-            form_home=home,
-            form_max=max_raw,
-            form_mode=mode,
-        ), 400
+        return _render_detail(conn, resume, True, status=400, travel_error=error,
+                              form_home=home, form_max=max_raw, form_mode=mode)
     db.set_travel_settings(conn, resume_id, home or None, max_min, mode)
     return redirect(url_for("main.resume_detail", resume_id=resume_id))
 
