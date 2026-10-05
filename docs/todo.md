@@ -292,7 +292,7 @@ Scraper repo note: S01-S15 commit in the SCRAPER repo (`E16-S<nn>: ...`); S16 an
 
 - [x] E16-S01 `capture_element` settle step: scroll into view, wait for opacity 1 and finished ancestor animations (docs/tickets/E16-S01-capture-settle-wait.md)
 - [x] E16-S02 `capture_element(min_height=100)`: skip captures shorter than the threshold (docs/tickets/E16-S02-capture-min-height-skip.md)
-- [ ] E16-S03 `SiteAdapter.screenshot_min_height` and the backfill passes it (docs/tickets/E16-S03-adapter-min-height-and-backfill.md)
+- [x] E16-S03 `SiteAdapter.screenshot_min_height` and the backfill passes it (docs/tickets/E16-S03-adapter-min-height-and-backfill.md)
 - [ ] E16-S04 pipeline passes `screenshot_min_height` (docs/tickets/E16-S04-pipeline-pass-min-height.md)
 - [ ] E16-S05 markdown_export: `remove_screenshot_line` (docs/tickets/E16-S05-markdown-remove-screenshot-line.md)
 - [ ] E16-S06 `core/screenshot_prune.py`: move thin PNGs aside, drop their markdown line (docs/tickets/E16-S06-screenshot-prune-module.md)
