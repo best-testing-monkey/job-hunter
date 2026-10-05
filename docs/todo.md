@@ -261,4 +261,4 @@ Scraper repo note: S01-S05 commit in the SCRAPER repo (`E15-S<nn>: ...`); S06-S1
 
 ### Part 3 — QA
 
-- [ ] E15-S10 Drive the real app on port 5001 with stale fixtures (0/1/2/3 days), `stale-sync` on copies, record `docs/e15-qa-results.md` (docs/tickets/E15-S10-qa-and-record-results.md)
+- [x] E15-S10 Drive the real app on port 5001 with stale fixtures (0/1/2/3 days), `stale-sync` on copies, record `docs/e15-qa-results.md` (docs/tickets/E15-S10-qa-and-record-results.md)
