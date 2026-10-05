@@ -219,7 +219,7 @@ Each story needs the shared stories it names. Each edits only its own adapter + 
 - [x] E14-S10 ictergezocht: skip Cloudflare challenge pages cleanly, no bypass; README note (needs S02-S04) (docs/tickets/E14-S10-ictergezocht-skip-cloudflare-challenge.md)
 - [x] E14-S11 circle8 + sevenstars: diagnose why Cookiebot still blocks (live probe), fix selector/hide list (docs/tickets/E14-S11-cookiebot-circle8-sevenstars.md)
 - [x] E14-S12 wearedevelopers: replace the `:has()` selector with a stable one (docs/tickets/E14-S12-wearedevelopers-stable-selector.md)
-- [ ] E14-S13 iamexpat: narrower wrapper, hide extra widgets, retry on "not attached" (after S01/S02: same `screenshots.py`) (docs/tickets/E14-S13-iamexpat-narrow-wrapper-and-retry.md)
+- [x] E14-S13 iamexpat: narrower wrapper, hide extra widgets, retry on "not attached" (after S01/S02: same `screenshots.py`) (docs/tickets/E14-S13-iamexpat-narrow-wrapper-and-retry.md)
 - [ ] E14-S14 pro_act: hide the cookie consent dialog and dimmer (docs/tickets/E14-S14-pro-act-hide-consent-dialog.md)
 - [ ] E14-S15 synprofs: hide the sticky header (docs/tickets/E14-S15-synprofs-hide-sticky-header.md)
 - [ ] E14-S16 harveynash: hide the Reageren button, check the faded text (docs/tickets/E14-S16-harveynash-hide-reageren-button.md)
