@@ -224,7 +224,7 @@ Each story needs the shared stories it names. Each edits only its own adapter + 
 - [x] E14-S14 pro_act: hide the cookie consent dialog and dimmer (docs/tickets/E14-S14-pro-act-hide-consent-dialog.md)
 - [x] E14-S15 synprofs: hide the sticky header (docs/tickets/E14-S15-synprofs-hide-sticky-header.md)
 - [x] E14-S16 harveynash: hide the Reageren button, check the faded text (docs/tickets/E14-S16-harveynash-hide-reageren-button.md)
-- [ ] E14-S17 stone_interim: find a live selector with a probe or document BLOCKED (docs/tickets/E14-S17-stone-interim-live-selector.md)
+- [x] E14-S17 stone_interim: find a live selector with a probe or document BLOCKED (docs/tickets/E14-S17-stone-interim-live-selector.md)
 - [ ] E14-S19 `capture_element` for STEALTH adapters runs inside scrapling `StealthyFetcher` (same browser as the scraper); owner decision 2026-10-05 (docs/tickets/E14-S19-capture-via-stealthy-fetcher.md) — after S17, touches screenshots.py
 - [ ] E14-S20 Re-probe circle8 / sevenstars / wearedevelopers via the stealth capture and fix their selectors (docs/tickets/E14-S20-reprobe-blocked-stealth-sites.md) — after S19
 - [ ] GATE-4 full-suite gate agent (scraper + app) after E14-S20 (moved: S19/S20 were added after S17)
