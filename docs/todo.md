@@ -301,7 +301,7 @@ Scraper repo note: S01-S15 commit in the SCRAPER repo (`E16-S<nn>: ...`); S16 an
 ### Part 2 — Delisted-posting detection
 
 - [x] E16-S08 `core/gone.py`: pure `is_unrelated_redirect`, `title_has_gone_marker`, `gone_reason`, `GoneCheck` (docs/tickets/E16-S08-gone-helpers.md)
-- [ ] E16-S09 `PostingGone`, adapter `listing_paths`/`gone_markers`, opt-in `gone_check` in `fetch_page` (docs/tickets/E16-S09-base-postinggone-and-fetch.md)
+- [x] E16-S09 `PostingGone`, adapter `listing_paths`/`gone_markers`, opt-in `gone_check` in `fetch_page` (docs/tickets/E16-S09-base-postinggone-and-fetch.md)
 - [ ] E16-S10 `JobRepository.touch_seen` (safety valve support) (docs/tickets/E16-S10-db-touch-seen.md)
 - [ ] E16-S11 pipeline: a gone detail page marks the posting stale, `gone` counter, safety valve (docs/tickets/E16-S11-pipeline-handle-postinggone.md)
 - [ ] E16-S12 `capture_element` skips gone pages (404/410/unrelated redirect/title marker) (docs/tickets/E16-S12-capture-skip-gone-pages.md)
