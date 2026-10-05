@@ -208,3 +208,11 @@ button:active {
   font-size: 0.75rem;
   text-transform: uppercase;
 }
+
+.stale-notice {
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--text-muted);
+  background: #2a2a2a;
+  color: var(--text-secondary);
+}

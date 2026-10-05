@@ -170,6 +170,11 @@ def update_match_status_route(match_id):
     match = db.get_match(conn, match_id)
     if match is None:
         abort(404)
+    state, _ = jobs.job_stale_state(match["job_file"])
+    if state == "hidden":
+        abort(404)
+    if state == "stale":
+        abort(409)
     status = request.form["status"]
     try:
         db.update_match_status(conn, match_id, status)
@@ -183,6 +188,9 @@ def job_detail(match_id):
     conn = get_db()
     match = db.get_match(conn, match_id)
     if match is None:
+        abort(404)
+    state, since = jobs.job_stale_state(match["job_file"])
+    if state == "hidden":
         abort(404)
 
     job_info = jobs.parse_job_file(match["job_file"])
@@ -199,6 +207,7 @@ def job_detail(match_id):
         source=source_url,
         description_html=description_html,
         match_id=match_id,
+        stale_since=since.isoformat() if state == "stale" else None,
         has_screenshot=jobs.screenshot_path_for(match["job_file"]) is not None,
     )
 
@@ -207,6 +216,8 @@ def job_detail(match_id):
 def job_screenshot(match_id):
     match = db.get_match(get_db(), match_id)
     if match is None:
+        abort(404)
+    if jobs.job_stale_state(match["job_file"])[0] == "hidden":
         abort(404)
     path = jobs.screenshot_path_for(match["job_file"])
     if path is None:

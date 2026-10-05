@@ -3,6 +3,9 @@
 {% block content %}
 <main>
     <h1>{{ title }}</h1>
+    {% if stale_since %}
+    <p class="stale-notice" role="note">Delisted on {{ stale_since }} — this posting is no longer listed on the original site.</p>
+    {% endif %}
 
     <table>
         <tr>

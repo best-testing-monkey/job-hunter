@@ -1386,3 +1386,106 @@ def test_resume_detail_only_hidden_shows_empty_state(tmp_path):
     html = client.get(f"/resumes/{resume_id}").get_data(as_text=True)
     assert "No matches yet" in html
     assert "HiddenOnlyQ" not in html
+
+
+def _stale_setup(tmp_path, days, status=None, png=False):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    (tmp_path / "jobs").mkdir(exist_ok=True)
+    job = tmp_path / "jobs" / "s-1-x.md"
+    bullet = ""
+    since = None
+    if days:
+        since = (date.today() - timedelta(days=days)).isoformat()
+        bullet = f"- Stale since: {since}\n"
+    job.write_text(f"{bullet}# Stale T\n\n- Source: https://example.com/j\n\n## Description\n\nBody\n")
+    if png:
+        (tmp_path / "screenshots").mkdir(exist_ok=True)
+        (tmp_path / "screenshots" / "s-1-x.png").write_bytes(PNG_BYTES)
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "R", "# R")
+    mid = _add_match(conn, resume_id, job, "Stale T")
+    if status:
+        db.update_match_status(conn, mid, status)
+    conn.close()
+    return app, mid, since
+
+
+def test_job_detail_stale_shows_notice(tmp_path):
+    for days in (1, 2):
+        sub = tmp_path / f"d{days}"
+        sub.mkdir()
+        app, mid, since = _stale_setup(sub, days)
+        r = app.test_client().get(f"/jobs/{mid}")
+        assert r.status_code == 200
+        html = r.get_data(as_text=True)
+        assert f"Delisted on {since}" in html
+        assert 'class="stale-notice"' in html
+        assert "View original posting" in html
+
+
+def test_job_detail_live_has_no_notice(tmp_path):
+    app, mid, _ = _stale_setup(tmp_path, 0)
+    r = app.test_client().get(f"/jobs/{mid}")
+    assert r.status_code == 200
+    assert "stale-notice" not in r.get_data(as_text=True)
+
+
+def test_job_detail_stale_today_has_notice(tmp_path):
+    app, mid, since = _stale_setup(tmp_path, 0)
+    job = tmp_path / "jobs" / "s-1-x.md"
+    today = date.today().isoformat()
+    job.write_text(f"- Stale since: {today}\n" + job.read_text())
+    html = app.test_client().get(f"/jobs/{mid}").get_data(as_text=True)
+    assert f"Delisted on {today}" in html
+
+
+def test_job_detail_hidden_is_styled_404(tmp_path):
+    app, mid, _ = _stale_setup(tmp_path, 3)
+    r = app.test_client().get(f"/jobs/{mid}")
+    assert r.status_code == 404
+    assert "404 \u2014 Not Found" in r.get_data(as_text=True)
+
+
+def test_job_detail_applied_stale_still_opens(tmp_path):
+    app, mid, since = _stale_setup(tmp_path, 1, status="Applied")
+    r = app.test_client().get(f"/jobs/{mid}")
+    assert r.status_code == 200
+    assert f"Delisted on {since}" in r.get_data(as_text=True)
+
+
+def test_job_screenshot_hidden_404_stale_200(tmp_path):
+    (tmp_path / "h").mkdir()
+    app, mid, _ = _stale_setup(tmp_path / "h", 3, png=True)
+    assert app.test_client().get(f"/jobs/{mid}/screenshot").status_code == 404
+    (tmp_path / "s").mkdir()
+    app, mid, _ = _stale_setup(tmp_path / "s", 1, png=True)
+    r = app.test_client().get(f"/jobs/{mid}/screenshot")
+    assert r.status_code == 200
+    assert r.mimetype == "image/png"
+
+
+def test_status_post_stale_409_unchanged(tmp_path):
+    app, mid, _ = _stale_setup(tmp_path, 1)
+    r = app.test_client().post(f"/matches/{mid}/status", data={"status": "Done"})
+    assert r.status_code == 409
+    conn = db.get_connection(app.config["DATABASE"])
+    assert db.get_match(conn, mid)["status"] != "Done"
+    conn.close()
+
+
+def test_status_post_hidden_404_unchanged(tmp_path):
+    app, mid, _ = _stale_setup(tmp_path, 3)
+    r = app.test_client().post(f"/matches/{mid}/status", data={"status": "Done"})
+    assert r.status_code == 404
+    conn = db.get_connection(app.config["DATABASE"])
+    assert db.get_match(conn, mid)["status"] != "Done"
+    conn.close()
+
+
+def test_status_post_live_redirects(tmp_path):
+    app, mid, _ = _stale_setup(tmp_path, 0)
+    r = app.test_client().post(f"/matches/{mid}/status", data={"status": "Done"})
+    assert r.status_code == 302
