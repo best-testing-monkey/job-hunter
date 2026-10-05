@@ -191,3 +191,20 @@ button:active {
   border: 1px solid var(--text-muted);
   margin-top: 1rem;
 }
+
+.stale-row td {
+  background: #2a2a2a;
+  color: var(--text-muted);
+  pointer-events: none;
+  cursor: not-allowed;
+  user-select: none;
+}
+
+.stale-badge {
+  margin-left: 0.5rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--text-muted);
+  border-radius: 3px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}

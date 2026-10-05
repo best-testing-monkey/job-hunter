@@ -56,8 +56,20 @@ def resume_detail(resume_id):
     resume = db.get_resume(conn, resume_id)
     if resume is None:
         abort(404)
-    matches = db.get_matches(conn, resume_id)
-    return render_template("resume_detail.html", resume=resume, matches=matches)
+    live_matches = []
+    stale_matches = []
+    for m in db.get_matches(conn, resume_id):
+        state, since = jobs.job_stale_state(m["job_file"])
+        if state == "live":
+            live_matches.append(m)
+        elif state == "stale":
+            stale_matches.append({"match": m, "since": since.isoformat()})
+    return render_template(
+        "resume_detail.html",
+        resume=resume,
+        live_matches=live_matches,
+        stale_matches=stale_matches,
+    )
 
 
 def _run_rematch(resume_id: int, resume_file_path: str, db_path: str) -> None:

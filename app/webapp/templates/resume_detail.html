@@ -34,7 +34,7 @@
 
     <h2>Matches</h2>
 
-    {% if matches %}
+    {% if live_matches or stale_matches %}
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
             <label for="threshold-slider" style="color: var(--text-secondary);">Threshold:</label>
             <input type="range" min="0" max="100" value="65" id="threshold-slider" style="width: 150px;">
@@ -52,7 +52,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for match in matches %}
+                {% for match in live_matches %}
                 <tr data-score="{{ match['score'] }}">
                     <td data-sort-value="{{ match['score'] }}">{{ "%.2f" % match['score'] }}</td>
                     <td data-sort-value="{{ match['title'] }}">
@@ -70,6 +70,21 @@
                             </select>
                         </form>
                     </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tbody class="stale-rows">
+                {% for item in stale_matches %}
+                {% set match = item['match'] %}
+                <tr class="stale-row" aria-disabled="true" data-score="{{ match['score'] }}">
+                    <td data-sort-value="{{ match['score'] }}">{{ "%.2f" % match['score'] }}</td>
+                    <td data-sort-value="{{ match['title'] }}">
+                        <span class="stale-title">{{ match['title'] }}</span>
+                        <span class="stale-badge">stale since {{ item['since'] }}</span>
+                    </td>
+                    <td data-sort-value="{{ match['site'] }}">{{ match['site'] }}</td>
+                    <td data-sort-value="{{ match['location'] or 'N/A' }}">{{ match['location'] or 'N/A' }}</td>
+                    <td><span class="stale-status">{{ match['status'] }}</span></td>
                 </tr>
                 {% endfor %}
             </tbody>

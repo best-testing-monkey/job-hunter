@@ -1270,3 +1270,119 @@ Lead our product strategy.
     assert b"Product Manager" in response.data
     assert b"Lead our product strategy" in response.data
     assert b"View original posting" in response.data
+
+
+def _add_match(conn, resume_id, job_file, title):
+    db.upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file=str(job_file),
+        title=title,
+        site="TestSite",
+        location="Remote",
+        workplace="remote",
+        source_url="https://example.com/x",
+        score=0.9,
+        computed_at="2024-01-01T00:00:00",
+    )
+    return next(m["id"] for m in db.get_matches(conn, resume_id) if m["job_file"] == str(job_file))
+
+
+def test_resume_detail_stale_rows_disabled(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    jobs_dir = tmp_path / "jobs"
+    jobs_dir.mkdir()
+    today = date.today()
+    days = {"live": 0, "one": 1, "two": 2, "three": 3}
+    for key, n in days.items():
+        d = (today - timedelta(days=n)).isoformat()
+        bullet = f"- Stale since: {d}\n" if n else ""
+        (jobs_dir / f"{key}.md").write_text(f"{bullet}# T {key}\n## Description\nx")
+    (jobs_dir / "nobullet.md").write_text("# No bullet\n## Description\nx")
+    (jobs_dir / "applied.md").write_text(
+        f"- Stale since: {(today - timedelta(days=1)).isoformat()}\n# T applied\n## Description\nx"
+    )
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
+    ids = {}
+    for key, title in [
+        ("live", "LiveTitleQ"),
+        ("one", "StaleOneQ"),
+        ("two", "StaleTwoQ"),
+        ("three", "HiddenThreeQ"),
+        ("nobullet", "NoBulletQ"),
+        ("applied", "StaleAppliedQ"),
+    ]:
+        ids[key] = _add_match(conn, resume_id, jobs_dir / f"{key}.md", title)
+    db.update_match_status(conn, ids["applied"], "Applied")
+    conn.close()
+
+    response = client.get(f"/resumes/{resume_id}")
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+
+    assert f'<a href="/jobs/{ids["live"]}">LiveTitleQ</a>' in html
+    assert f'<a href="/jobs/{ids["nobullet"]}">NoBulletQ</a>' in html
+    for key, title in [("one", "StaleOneQ"), ("two", "StaleTwoQ"), ("applied", "StaleAppliedQ")]:
+        assert f'<span class="stale-title">{title}</span>' in html
+        assert f"/jobs/{ids[key]}\"" not in html
+        assert f"/matches/{ids[key]}/status" not in html
+    assert "HiddenThreeQ" not in html
+    assert html.count('class="stale-row"') == 3
+
+    first_end = html.index("</tbody>")
+    assert html.index('<tbody class="stale-rows">') > first_end
+    stale_section = html[html.index('<tbody class="stale-rows">'):]
+    stale_section = stale_section[:stale_section.index("</tbody>")]
+    assert stale_section.count('aria-disabled="true"') == 3
+    assert "<select" not in stale_section
+    assert "<form" not in stale_section
+    assert "<a " not in stale_section
+    assert f"stale since {(today - timedelta(days=1)).isoformat()}" in stale_section
+    assert f"stale since {(today - timedelta(days=2)).isoformat()}" in stale_section
+    assert '<span class="stale-status">Applied</span>' in stale_section
+
+
+def test_resume_detail_only_stale_still_renders_first_tbody(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    job = tmp_path / "s.md"
+    job.write_text(f"- Stale since: {(date.today() - timedelta(days=1)).isoformat()}\n# T\n")
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
+    _add_match(conn, resume_id, job, "OnlyStaleQ")
+    conn.close()
+
+    html = client.get(f"/resumes/{resume_id}").get_data(as_text=True)
+    assert "<tbody>" in html
+    assert html.index("<tbody>") < html.index('<tbody class="stale-rows">')
+    assert "No matches yet" not in html
+
+
+def test_resume_detail_only_hidden_shows_empty_state(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    job = tmp_path / "h.md"
+    job.write_text(f"- Stale since: {(date.today() - timedelta(days=3)).isoformat()}\n# T\n")
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
+    _add_match(conn, resume_id, job, "HiddenOnlyQ")
+    conn.close()
+
+    html = client.get(f"/resumes/{resume_id}").get_data(as_text=True)
+    assert "No matches yet" in html
+    assert "HiddenOnlyQ" not in html
