@@ -1,6 +1,16 @@
+from datetime import date
 from pathlib import Path
 
-from webapp.jobs import parse_job_file, site_name_for, get_job_description, render_description_html, screenshot_path_for
+from webapp.jobs import (
+    parse_job_file,
+    site_name_for,
+    get_job_description,
+    render_description_html,
+    screenshot_path_for,
+    read_stale_since,
+    stale_state,
+    job_stale_state,
+)
 
 
 def test_parse_job_file_and_site_name():
@@ -163,3 +173,99 @@ def test_screenshot_path_for_none_when_symlink_escapes(tmp_path):
     outside.write_bytes(b"x")
     (tmp_path / "screenshots" / "a-1-x.png").symlink_to(outside)
     assert screenshot_path_for(job) is None
+
+
+def test_stale_state_0_days():
+    today = date(2026, 10, 10)
+    since = date(2026, 10, 10)
+    assert stale_state(since, today) == 'stale'
+
+
+def test_stale_state_1_day():
+    today = date(2026, 10, 10)
+    since = date(2026, 10, 9)
+    assert stale_state(since, today) == 'stale'
+
+
+def test_stale_state_2_days():
+    today = date(2026, 10, 10)
+    since = date(2026, 10, 8)
+    assert stale_state(since, today) == 'stale'
+
+
+def test_stale_state_3_days():
+    today = date(2026, 10, 10)
+    since = date(2026, 10, 7)
+    assert stale_state(since, today) == 'hidden'
+
+
+def test_stale_state_many_days():
+    today = date(2026, 10, 10)
+    since = date(2026, 10, 1)
+    assert stale_state(since, today) == 'hidden'
+
+
+def test_stale_state_future_date():
+    today = date(2026, 10, 10)
+    since = date(2026, 10, 11)
+    assert stale_state(since, today) == 'stale'
+
+
+def test_stale_state_none():
+    today = date(2026, 10, 10)
+    assert stale_state(None, today) == 'live'
+
+
+def test_read_stale_since_valid_bullet(tmp_path):
+    job_file = tmp_path / "test.md"
+    job_file.write_text("# Test Job\n- Stale since: 2026-10-08\n\n## Description\nContent")
+    assert read_stale_since(job_file) == date(2026, 10, 8)
+
+
+def test_read_stale_since_absent(tmp_path):
+    job_file = tmp_path / "test.md"
+    job_file.write_text("# Test Job\n\n## Description\nContent")
+    assert read_stale_since(job_file) is None
+
+
+def test_read_stale_since_invalid_date(tmp_path):
+    job_file = tmp_path / "test.md"
+    job_file.write_text("# Test Job\n- Stale since: 2026-13-45\n\n## Description\nContent")
+    assert read_stale_since(job_file) is None
+
+
+def test_read_stale_since_bullet_after_description_ignored(tmp_path):
+    job_file = tmp_path / "test.md"
+    job_file.write_text("# Test Job\n\n## Description\nContent\n- Stale since: 2026-10-08")
+    assert read_stale_since(job_file) is None
+
+
+def test_read_stale_since_missing_file():
+    assert read_stale_since("/nonexistent/path/file.md") is None
+
+
+def test_parse_job_file_includes_stale_since(tmp_path):
+    job_file = tmp_path / "test.md"
+    job_file.write_text("# Test Job Title\n- Stale since: 2026-10-08\n\n## Description\nTest description")
+    result = parse_job_file(job_file)
+    assert "stale_since" in result
+    assert result["stale_since"] == date(2026, 10, 8)
+    assert "title" in result
+
+
+
+
+def test_job_stale_state_missing_file():
+    today = date(2026, 10, 10)
+    state, returned_date = job_stale_state("/nonexistent/path/file.md", today)
+    assert state == 'live'
+    assert returned_date is None
+
+
+def test_job_stale_state_with_valid_file(tmp_path):
+    job_file = tmp_path / "test.md"
+    job_file.write_text("# Test Job\n- Stale since: 2026-10-08\n\n## Description\nContent")
+    today = date(2026, 10, 10)
+    state, returned_date = job_stale_state(job_file, today)
+    assert state == 'stale'
+    assert returned_date == date(2026, 10, 8)
