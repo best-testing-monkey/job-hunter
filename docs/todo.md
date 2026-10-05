@@ -200,7 +200,7 @@ Scraper repo note: every story except S18 commits in the SCRAPER repo (`git -C s
 
 - [x] E14-S01 Add optional `screenshot_pre_actions` (click selectors before capture) to `SiteAdapter` and `capture_element` (docs/tickets/E14-S01-screenshot-pre-actions-mechanism.md)
 - [x] E14-S02 `capture_element` returns None for gated teasers and Cloudflare challenge pages (`screenshot_skip_selectors`, `_is_challenge`) (docs/tickets/E14-S02-capture-skip-gated-and-challenge-pages.md)
-- [ ] E14-S03 pipeline: pass pre-actions/skip selectors, count `screenshots_skipped` (docs/tickets/E14-S03-pipeline-pass-new-capture-options.md)
+- [x] E14-S03 pipeline: pass pre-actions/skip selectors, count `screenshots_skipped` (docs/tickets/E14-S03-pipeline-pass-new-capture-options.md)
 - [ ] E14-S04 backfill: pass pre-actions/skip selectors, count `skipped_blocked` (docs/tickets/E14-S04-backfill-pass-new-capture-options.md)
 - [ ] E14-S05 backfill skips postings marked `is_stale = 1` in scraper.db (`--db`, `--include-stale`) (docs/tickets/E14-S05-backfill-skip-stale-postings.md)
 - [ ] E14-S06 scrape crash safety: per-site exceptions caught, counters printed incrementally (docs/tickets/E14-S06-scrape-crash-safety.md)
