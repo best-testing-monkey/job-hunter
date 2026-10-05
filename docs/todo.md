@@ -107,6 +107,7 @@ LIVE-QA FLAGS (S31): guru element is truncated in saved HTML ("... Show more") â
 LIVE-QA FLAGS (S32): ictergezocht fixture has CookieYes overlay `#cookieyes-banner`; all 50 raw ictergezocht pages are Cloudflare challenge pages (only 1 fixture verifiable); wearedevelopers selector uses `:has()` (needs Chromium>=105, fine); headfirst + planet_interim intentionally None (no description scraped).
 STORY ADDED: E13-S36 (overlay/form hiding) runs after S32, before gate 3 + S33/S34.
 Gates done: GATE-1 (after S12), GATE-2 (after S19), GATE-3 (after S34, scraper 424x2 / app 94). Only S35 (live re-scrape) remains.
+NOTE (E14-S08): guru "Show more" is a LOGIN link for anonymous visitors (not an expander) -> BLOCKED, no pre-action; guru screenshots stay truncated by design (the full text is only visible after login). The site's truncated teaser is all that can be captured.
 Status log: tick each story here as it lands; gates done so far: (none)
 
 Scraper stories follow `docs/tickets/APPENDIX-A-standards.md` plus `docs/tickets/APPENDIX-B-scraper-standards.md`; app stories follow Appendix A only. The scraper stories touch the same adapter files several times (description, source URL, selector): run them one at a time, in the order listed. Keep any parallel subagent batch to 2 at a time, and only across scraper/app (never two scraper stories together).
@@ -210,7 +211,7 @@ Scraper repo note: every story except S18 commits in the SCRAPER repo (`git -C s
 
 Each story needs the shared stories it names. Each edits only its own adapter + test file (plus fixtures), except S08 (also `test_screenshots.py`) and S13 (also `screenshots.py`/`test_screenshots.py`).
 
-- [ ] E14-S08 guru: click "Show more" before capture (needs S01, S03, S04) (docs/tickets/E14-S08-guru-expand-show-more.md)
+- [x] E14-S08 guru: click "Show more" before capture (needs S01, S03, S04) (docs/tickets/E14-S08-guru-expand-show-more.md)
 - [ ] E14-S09 hero: detect the gated teaser and skip (needs S02-S04) (docs/tickets/E14-S09-hero-skip-gated-teaser.md)
 - [ ] E14-S10 ictergezocht: skip Cloudflare challenge pages cleanly, no bypass; README note (needs S02-S04) (docs/tickets/E14-S10-ictergezocht-skip-cloudflare-challenge.md)
 - [ ] E14-S11 circle8 + sevenstars: diagnose why Cookiebot still blocks (live probe), fix selector/hide list (docs/tickets/E14-S11-cookiebot-circle8-sevenstars.md)
