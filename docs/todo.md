@@ -296,7 +296,7 @@ Scraper repo note: S01-S15 commit in the SCRAPER repo (`E16-S<nn>: ...`); S16 an
 - [x] E16-S04 pipeline passes `screenshot_min_height` (docs/tickets/E16-S04-pipeline-pass-min-height.md)
 - [x] E16-S05 markdown_export: `remove_screenshot_line` (docs/tickets/E16-S05-markdown-remove-screenshot-line.md)
 - [x] E16-S06 `core/screenshot_prune.py`: move thin PNGs aside, drop their markdown line (docs/tickets/E16-S06-screenshot-prune-module.md)
-- [ ] E16-S07 CLI: `screenshots --prune-small` (docs/tickets/E16-S07-cli-prune-small.md)
+- [x] E16-S07 CLI: `screenshots --prune-small` (docs/tickets/E16-S07-cli-prune-small.md)
 
 ### Part 2 — Delisted-posting detection
 
