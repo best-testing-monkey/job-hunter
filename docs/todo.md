@@ -257,7 +257,7 @@ Scraper repo note: S01-S05 commit in the SCRAPER repo (`E15-S<nn>: ...`); S06-S1
 - [x] E15-S07 app: resume list page counts only live matches (docs/tickets/E15-S07-app-resume-list-excludes-stale.md)
 - [x] E15-S08 app: resume detail shows stale matches as dark-gray non-responsive rows, hides expired ones (docs/tickets/E15-S08-app-resume-detail-stale-rows.md)
 - [x] E15-S09 app: job detail notice for stale, 404 for hidden (detail, screenshot, status) (docs/tickets/E15-S09-app-job-detail-stale-and-hidden-404.md)
-- [ ] GATE-5 full-suite gate agent (scraper + app) after E15-S09
+- [x] GATE-5 full-suite gate agent (scraper + app) after E15-S09
 
 ### Part 3 — QA
 
