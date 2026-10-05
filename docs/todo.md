@@ -221,7 +221,7 @@ Each story needs the shared stories it names. Each edits only its own adapter + 
 - [x] E14-S12 wearedevelopers: replace the `:has()` selector with a stable one (docs/tickets/E14-S12-wearedevelopers-stable-selector.md)
 - [x] E14-S13 iamexpat: narrower wrapper, hide extra widgets, retry on "not attached" (after S01/S02: same `screenshots.py`) (docs/tickets/E14-S13-iamexpat-narrow-wrapper-and-retry.md)
 - [x] E14-S14 pro_act: hide the cookie consent dialog and dimmer (docs/tickets/E14-S14-pro-act-hide-consent-dialog.md)
-- [ ] E14-S15 synprofs: hide the sticky header (docs/tickets/E14-S15-synprofs-hide-sticky-header.md)
+- [x] E14-S15 synprofs: hide the sticky header (docs/tickets/E14-S15-synprofs-hide-sticky-header.md)
 - [ ] E14-S16 harveynash: hide the Reageren button, check the faded text (docs/tickets/E14-S16-harveynash-hide-reageren-button.md)
 - [ ] E14-S17 stone_interim: find a live selector with a probe or document BLOCKED (docs/tickets/E14-S17-stone-interim-live-selector.md)
 - [ ] E14-S19 `capture_element` for STEALTH adapters runs inside scrapling `StealthyFetcher` (same browser as the scraper); owner decision 2026-10-05 (docs/tickets/E14-S19-capture-via-stealthy-fetcher.md) — after S17, touches screenshots.py
