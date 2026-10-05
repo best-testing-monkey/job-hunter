@@ -110,6 +110,7 @@ Gates done: GATE-1 (after S12), GATE-2 (after S19), GATE-3 (after S34, scraper 4
 NOTE (E14-S08): guru "Show more" is a LOGIN link for anonymous visitors (not an expander) -> BLOCKED, no pre-action; guru screenshots stay truncated by design (the full text is only visible after login). The site's truncated teaser is all that can be captured.
 NOTE (E14-S09): hero BLOCKED as a selector skip — the gate text lives in `section.animate-hero-consent-in > h6` on ALL 81 saved hero pages (also the good ones), so a selector cannot tell gated from good. IDEA (not yet a story): skip by RENDERED SIZE — gated captures are a ~640x65 strip; add an optional `screenshot_min_height` (skip/None when the element is shorter) and set it for hero ~150px. Ask the owner before adding.
 FINDING (E14-S11, needs owner decision): circle8 + sevenstars answer HTTP 403 to `capture_element(stealth=True)` (bare `patchright chromium.launch(headless=True)`), yet the scraper itself fetches the same sites fine with scrapling `StealthyFetcher` (Camoufox anti-detect browser, FetchStrategy.STEALTH). So screenshots use a WEAKER browser than scraping. OPTION: do the capture inside `StealthyFetcher.fetch(url, headless=True, page_action=cb)` (same browser config the scraper already uses on these sites) — recommended by the orchestrator, NOT started; ask the owner first because it concerns bot-wall behaviour. UPDATE (E14-S12): wearedevelopers is also blocked the same way (403 "Attention Required! | Cloudflare" on the bare browser). So the StealthyFetcher option would unblock circle8 + sevenstars + wearedevelopers (and maybe ictergezocht). Until then circle8/sevenstars/wearedevelopers (and ictergezocht, which is a hard Cloudflare challenge even for the scraper) stay without screenshots.
+OWNER DECISION 2026-10-05: screenshots use the same anti-detect browser as the scraper -> E14-S19 + E14-S20 added; GATE-4 now after E14-S20; E14-S18 (live QA) stays last.
 Status log: tick each story here as it lands; gates done so far: (none)
 
 Scraper stories follow `docs/tickets/APPENDIX-A-standards.md` plus `docs/tickets/APPENDIX-B-scraper-standards.md`; app stories follow Appendix A only. The scraper stories touch the same adapter files several times (description, source URL, selector): run them one at a time, in the order listed. Keep any parallel subagent batch to 2 at a time, and only across scraper/app (never two scraper stories together).
@@ -223,7 +224,9 @@ Each story needs the shared stories it names. Each edits only its own adapter + 
 - [ ] E14-S15 synprofs: hide the sticky header (docs/tickets/E14-S15-synprofs-hide-sticky-header.md)
 - [ ] E14-S16 harveynash: hide the Reageren button, check the faded text (docs/tickets/E14-S16-harveynash-hide-reageren-button.md)
 - [ ] E14-S17 stone_interim: find a live selector with a probe or document BLOCKED (docs/tickets/E14-S17-stone-interim-live-selector.md)
-- [ ] GATE-4 full-suite gate agent (scraper + app) after E14-S17
+- [ ] E14-S19 `capture_element` for STEALTH adapters runs inside scrapling `StealthyFetcher` (same browser as the scraper); owner decision 2026-10-05 (docs/tickets/E14-S19-capture-via-stealthy-fetcher.md) — after S17, touches screenshots.py
+- [ ] E14-S20 Re-probe circle8 / sevenstars / wearedevelopers via the stealth capture and fix their selectors (docs/tickets/E14-S20-reprobe-blocked-stealth-sites.md) — after S19
+- [ ] GATE-4 full-suite gate agent (scraper + app) after E14-S20 (moved: S19/S20 were added after S17)
 
 ### Part 3 — QA
 
