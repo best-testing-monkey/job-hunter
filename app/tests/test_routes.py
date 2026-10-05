@@ -1,3 +1,6 @@
+import json
+import re
+from datetime import date, timedelta
 from unittest.mock import patch, MagicMock
 from webapp import create_app
 from webapp import db
@@ -668,6 +671,149 @@ def test_resume_list_with_matches_includes_match_data(tmp_path):
     assert '"score": 0.75' in response_text
     assert '"status": "New"' in response_text
     assert f'data-resume-id="{resume_id}"' in response_text
+
+
+def test_resume_list_filters_stale_matches(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    # Create four job files with different stale states
+    jobs_dir = tmp_path / "jobs"
+    jobs_dir.mkdir()
+
+    today = date.today()
+    job_live = jobs_dir / "job_live.md"
+    job_live.write_text("# Live Job\n## Description\nThis is a live job")
+
+    job_1_day = jobs_dir / "job_1_day.md"
+    stale_1_day = (today - timedelta(days=1)).isoformat()
+    job_1_day.write_text(f"- Stale since: {stale_1_day}\n# Stale Job 1 Day\n## Description\nStale 1 day")
+
+    job_2_days = jobs_dir / "job_2_days.md"
+    stale_2_days = (today - timedelta(days=2)).isoformat()
+    job_2_days.write_text(f"- Stale since: {stale_2_days}\n# Stale Job 2 Days\n## Description\nStale 2 days")
+
+    job_3_days = jobs_dir / "job_3_days.md"
+    stale_3_days = (today - timedelta(days=3)).isoformat()
+    job_3_days.write_text(f"- Stale since: {stale_3_days}\n# Hidden Job 3 Days\n## Description\nHidden (3 days)")
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
+
+    # Create matches for all four jobs
+    db.upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file=str(job_live),
+        title="Live Job",
+        site="TestSite",
+        location="Remote",
+        workplace="remote",
+        source_url="https://example.com/live",
+        score=0.9,
+        computed_at="2024-01-01T00:00:00",
+        job_posted="2026-09-25T10:00:00Z",
+    )
+    db.upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file=str(job_1_day),
+        title="Stale Job 1 Day",
+        site="TestSite",
+        location="Remote",
+        workplace="remote",
+        source_url="https://example.com/stale1",
+        score=0.9,
+        computed_at="2024-01-01T00:00:00",
+        job_posted="2026-09-24T10:00:00Z",
+    )
+    db.upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file=str(job_2_days),
+        title="Stale Job 2 Days",
+        site="TestSite",
+        location="Remote",
+        workplace="remote",
+        source_url="https://example.com/stale2",
+        score=0.9,
+        computed_at="2024-01-01T00:00:00",
+        job_posted="2026-09-23T10:00:00Z",
+    )
+    db.upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file=str(job_3_days),
+        title="Hidden Job 3 Days",
+        site="TestSite",
+        location="Remote",
+        workplace="remote",
+        source_url="https://example.com/hidden",
+        score=0.9,
+        computed_at="2024-01-01T00:00:00",
+        job_posted="2026-09-22T10:00:00Z",
+    )
+    conn.close()
+
+    response = client.get("/")
+    assert response.status_code == 200
+
+    # Extract resume-match-data JSON from the response
+    response_text = response.get_data(as_text=True)
+    match = re.search(r'<script type="application/json" id="resume-match-data">(.*?)</script>', response_text)
+    assert match, "resume-match-data script not found"
+
+    resume_match_data = json.loads(match.group(1))
+
+    # Only the live job should be in the data
+    assert str(resume_id) in resume_match_data
+    assert len(resume_match_data[str(resume_id)]) == 1
+    assert resume_match_data[str(resume_id)][0]["score"] == 0.9
+
+
+def test_resume_list_missing_job_file_counts_as_live(tmp_path):
+    app = create_app()
+    app.config["DATABASE"] = str(tmp_path / "test.db")
+    app.config["RESUMES_DIR"] = str(tmp_path / "resumes")
+    client = app.test_client()
+
+    conn = db.get_connection(app.config["DATABASE"])
+    db.init_db(conn)
+    resume_id = db.create_resume(conn, app.config["RESUMES_DIR"], "My Resume", "# My Resume")
+
+    # Create a match with a non-existent job file
+    db.upsert_match(
+        conn,
+        resume_id=resume_id,
+        job_file="/nonexistent/job.md",
+        title="Missing Job",
+        site="TestSite",
+        location="Remote",
+        workplace="remote",
+        source_url="https://example.com/missing",
+        score=0.9,
+        computed_at="2024-01-01T00:00:00",
+        job_posted="2026-09-25T10:00:00Z",
+    )
+    conn.close()
+
+    response = client.get("/")
+    assert response.status_code == 200
+
+    # Extract resume-match-data JSON from the response
+    response_text = response.get_data(as_text=True)
+    match = re.search(r'<script type="application/json" id="resume-match-data">(.*?)</script>', response_text)
+    assert match, "resume-match-data script not found"
+
+    resume_match_data = json.loads(match.group(1))
+
+    # Missing job file should still be counted as live
+    assert str(resume_id) in resume_match_data
+    assert len(resume_match_data[str(resume_id)]) == 1
+    assert resume_match_data[str(resume_id)][0]["score"] == 0.9
 
 
 def test_update_match_status_valid(tmp_path):

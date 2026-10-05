@@ -40,6 +40,7 @@ def resume_list():
         resume_match_data[resume["id"]] = [
             {"score": m["score"], "status": m["status"], "job_posted": m["job_posted"]}
             for m in matches
+            if jobs.job_stale_state(m["job_file"])[0] == "live"
         ]
     return render_template("resumes.html", resumes=resumes, resume_match_data=resume_match_data)
 
