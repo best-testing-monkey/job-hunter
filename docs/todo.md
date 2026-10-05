@@ -233,7 +233,7 @@ Each story needs the shared stories it names. Each edits only its own adapter + 
 
 ### Part 3 — QA
 
-- [ ] E14-S18 Re-run screenshots for the fixed sites, visual check of 8 PNGs, counts, record `docs/e14-qa-results.md` (live network) (docs/tickets/E14-S18-rerun-qa-and-record-results.md)
+- [x] E14-S18 Re-run screenshots for the fixed sites, visual check of 8 PNGs, counts, record `docs/e14-qa-results.md` (live network) (docs/tickets/E14-S18-rerun-qa-and-record-results.md)
 
 ## Epic 15 — Stale (delisted) postings
 
