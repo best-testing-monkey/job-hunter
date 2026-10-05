@@ -1,7 +1,7 @@
 import threading
 from datetime import datetime, timezone
 from flask import Blueprint, jsonify, send_file, render_template, g, current_app, request, redirect, url_for, abort
-from webapp import db, matcher, jobs
+from webapp import db, matcher, jobs, travel
 
 bp = Blueprint("main", __name__)
 
@@ -64,12 +64,66 @@ def resume_detail(resume_id):
             live_matches.append(m)
         elif state == "stale":
             stale_matches.append({"match": m, "since": since.isoformat()})
+    travel_filter = request.args.get("travel_filter", "1") != "0"
+    live_rows, hidden_count, travel_warning = travel.apply_travel(resume, live_matches, travel_filter)
+    stale_rows, _, _ = travel.apply_travel(resume, [s["match"] for s in stale_matches], False)
+    stale_matches = [
+        {"match": m, "since": s["since"], "travel": info}
+        for s, (m, info) in zip(stale_matches, stale_rows)
+    ]
+    travel_active = bool(resume["home_city"]) and resume["max_travel_minutes"] is not None
     return render_template(
         "resume_detail.html",
         resume=resume,
-        live_matches=live_matches,
+        live_matches=live_rows,
         stale_matches=stale_matches,
+        hidden_count=hidden_count,
+        travel_warning=travel_warning,
+        travel_filter=travel_filter,
+        travel_active=travel_active,
+        travel_error=request.args.get("travel_error"),
     )
+
+
+@bp.route("/resumes/<int:resume_id>/travel", methods=["POST"])
+def save_travel_settings(resume_id):
+    conn = get_db()
+    resume = db.get_resume(conn, resume_id)
+    if resume is None:
+        abort(404)
+    home = request.form.get("home_city", "").strip()
+    max_raw = request.form.get("max_travel_minutes", "").strip()
+    mode = request.form.get("travel_mode", "car")
+    error = None
+    max_min = None
+    if mode not in ("car", "transit"):
+        error = "Travel mode must be car or transit."
+    elif bool(home) != bool(max_raw):
+        error = "Set both home city and max travel time, or leave both blank to disable."
+    elif home:
+        if not max_raw.isdigit() or not (1 <= int(max_raw) <= 1440):
+            error = "Max travel time must be a whole number of minutes between 1 and 1440."
+        elif travel.geo.resolve_location(home) is None:
+            error = f"Unknown city '{home}'."
+        else:
+            max_min = int(max_raw)
+    if error:
+        return render_template(
+            "resume_detail.html",
+            resume=resume,
+            live_matches=[],
+            stale_matches=[],
+            hidden_count=0,
+            travel_warning=None,
+            travel_filter=True,
+            travel_active=False,
+            travel_error=error,
+            form_home=home,
+            form_max=max_raw,
+            form_mode=mode,
+        ), 400
+    db.set_travel_settings(conn, resume_id, home or None, max_min, mode)
+    return redirect(url_for("main.resume_detail", resume_id=resume_id))
 
 
 def _run_rematch(resume_id: int, resume_file_path: str, db_path: str) -> None:

@@ -42,6 +42,41 @@ def init_db(conn: sqlite3.Connection) -> None:
             UNIQUE(resume_id, job_file)
         )
     """)
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(resumes)")}
+    for column, ddl in (
+        ("home_city", "home_city TEXT"),
+        ("max_travel_minutes", "max_travel_minutes INTEGER"),
+        ("travel_mode", "travel_mode TEXT DEFAULT 'car'"),
+    ):
+        if column not in existing:
+            conn.execute(f"ALTER TABLE resumes ADD COLUMN {ddl}")
+    conn.commit()
+
+
+def get_travel_settings(conn: sqlite3.Connection, resume_id: int) -> dict | None:
+    row = get_resume(conn, resume_id)
+    if row is None:
+        return None
+    return {
+        "home_city": row["home_city"],
+        "max_travel_minutes": row["max_travel_minutes"],
+        "travel_mode": row["travel_mode"] or "car",
+    }
+
+
+def set_travel_settings(
+    conn: sqlite3.Connection,
+    resume_id: int,
+    home_city: str | None,
+    max_travel_minutes: int | None,
+    travel_mode: str = "car",
+) -> None:
+    if travel_mode not in ("car", "transit"):
+        raise ValueError(f"Invalid travel mode: {travel_mode}")
+    conn.execute(
+        "UPDATE resumes SET home_city = ?, max_travel_minutes = ?, travel_mode = ? WHERE id = ?",
+        (home_city, max_travel_minutes, travel_mode, resume_id),
+    )
     conn.commit()
 
 
