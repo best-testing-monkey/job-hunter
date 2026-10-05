@@ -97,7 +97,7 @@ doesn't also touch `__init__.py` (nothing else in this batch does).
 Rules: story agents run ONLY the tests applicable to their change (never the full suite).
 Full-suite gates run by a SEPARATE fix-it subagent after S12, after S19 and after S34 (scraper: `uv run pytest` in scraper/; app: `uv run pytest tests/ -q` in app/), fixing failures and committing in the right repo.
 Follow-up (cleanup, after S12 gate): freelancer_com.py uses a `\x00AMP\x00` placeholder hack because `html_to_markdown` treats any `&` as HTML; replace with a `plain=True` option on the helper.
-OPEN QUESTION for owner (found in S17): headfirst has no public per-job page — source_url is the shared /vind-opdrachten overview (test pins this); the only per-ad link is the external striive.com brokerUrl, already stored as apply_url. Decide: keep overview, or use brokerUrl as source_url.
+DECIDED (owner, closed): headfirst keeps the shared `/vind-opdrachten` overview as `source_url`; the external striive.com brokerUrl stays only as `apply_url`. No code change (E13-S17's test already pins the overview URL). Found in S17.
 NOTE (S18): pro_act posting `pro_act-8681-open-sollicitatie-2026` is an open-application form, not a job ad — probably should be excluded by the scrape filters; not fixed.
 NOTE (S19): tender_link stored URL is a human ad page that 301-redirects to a longer SEO-slug canonical; works for users, left as is.
 FOLLOW-UP (S28): pro_act has NO screenshot_selector (BLOCKED: apply form `div.contact-info` is a sibling of the ad text inside `div.content-wrapper`); hero is a gated/blurred teaser (live QA in S35). Idea: add an optional `screenshot_hide_selectors` adapter attribute (elements hidden via JS before the element screenshot) to unblock pro_act and clean up cookie banners/forms generally.
@@ -185,3 +185,79 @@ Last. Live network, long-running; the only story that writes `scraper/jobs/`, `r
 ### Scraper repo note
 
 `scraper/` is a separate git repository with its own history. Epic 13 tickets that change code, tests, fixtures or `scraper/README.md` are committed in the SCRAPER repo (`git -C scraper commit`, message `E13-S<nn>: ...`). Tickets that change `app/` and everything under `docs/` (including ticking items in this file) are committed in the JOB-HUNTER repo. Generated outputs in `scraper/` (`jobs/`, `raw/`, `scraper.db`, `screenshots/`) are git-ignored and never committed. Story E13-S01 first commits the large pre-existing uncommitted scraper work; E13-S35 is the only one that writes the generated directories.
+
+## Epic 14 — Screenshot quality fixes (follow-up round after the Epic 13 QA)
+
+**GOAL (set 2026-10-05):** complete E14-S01..S18 via `/run-stories` with cheap subagents, one story at a time. Derived only from the Follow-ups in `docs/e13-qa-results.md`; owner decision: "do a follow-up round, with 15 or so small per-site fixes".
+Rules: story agents run ONLY the tests applicable to their change (never the full suite). Standards: `docs/tickets/APPENDIX-A-standards.md`, `APPENDIX-B-scraper-standards.md` and the new `APPENDIX-C-screenshot-fix-standards.md` (probe protocol: ONE headless live probe per site from the session scratchpad, then the fix, then a fixture-based unit test; browser tests are `enable_socket` + `file://` only; no Cloudflare/bot-wall bypass, `--ignore-robots` never).
+GATE-4 (full suites by a SEPARATE fix-it subagent: `uv run pytest` in `scraper/`, `uv run pytest tests/ -q` in `app/`; fix failures, commit in the right repo): after E14-S17 (the last code story).
+E14-S18 is a live-network QA story: it already has the owner's OK in the Epic 13 style, but ask before running if it will take more than 1 hour or is heavy (13 GB RAM machine); follow Appendix C safety rules (backup first, one heavy process at a time, polite delays, owner's app on port 5000 untouched, own app on 5001).
+Same-file chains (strictly sequential, and never two scraper stories at once): `screenshots.py` S01 -> S02 -> S13; `pipeline.py` S03 -> S06 -> S07 (and Epic 15 S03 later); `screenshot_backfill.py` S04 -> S05; `cli.py` S05 -> S06; `test_screenshots.py` S01, S02, S08, S13; `base.py` S01 -> S02; `markdown_export.py` S07.
+Decisions: backfill skips stale postings by reading `scraper.db` (`is_stale = 1`) read-only in E14-S05 (no dependency on Epic 15); `capture_element` returns True/False/None where None = skipped on purpose (gated teaser or Cloudflare challenge, counted as `skipped_blocked`/`screenshots_skipped`, never as failure); the URL-check false-positive (`freelancer.com /projects/api/`) is handled in the improved query in E14-S18.
+Scraper repo note: every story except S18 commits in the SCRAPER repo (`git -C scraper commit`, message `E14-S<nn>: ...`); S18 writes only `docs/` (JOB-HUNTER repo).
+
+### Part 1 — Shared mechanisms
+
+- [ ] E14-S01 Add optional `screenshot_pre_actions` (click selectors before capture) to `SiteAdapter` and `capture_element` (docs/tickets/E14-S01-screenshot-pre-actions-mechanism.md)
+- [ ] E14-S02 `capture_element` returns None for gated teasers and Cloudflare challenge pages (`screenshot_skip_selectors`, `_is_challenge`) (docs/tickets/E14-S02-capture-skip-gated-and-challenge-pages.md)
+- [ ] E14-S03 pipeline: pass pre-actions/skip selectors, count `screenshots_skipped` (docs/tickets/E14-S03-pipeline-pass-new-capture-options.md)
+- [ ] E14-S04 backfill: pass pre-actions/skip selectors, count `skipped_blocked` (docs/tickets/E14-S04-backfill-pass-new-capture-options.md)
+- [ ] E14-S05 backfill skips postings marked `is_stale = 1` in scraper.db (`--db`, `--include-stale`) (docs/tickets/E14-S05-backfill-skip-stale-postings.md)
+- [ ] E14-S06 scrape crash safety: per-site exceptions caught, counters printed incrementally (docs/tickets/E14-S06-scrape-crash-safety.md)
+- [ ] E14-S07 pipeline rewrites the markdown when the Source URL changed although the content hash did not (docs/tickets/E14-S07-rewrite-markdown-when-source-url-changes.md)
+
+### Part 2 — Per-site fixes
+
+Each story needs the shared stories it names. Each edits only its own adapter + test file (plus fixtures), except S08 (also `test_screenshots.py`) and S13 (also `screenshots.py`/`test_screenshots.py`).
+
+- [ ] E14-S08 guru: click "Show more" before capture (needs S01, S03, S04) (docs/tickets/E14-S08-guru-expand-show-more.md)
+- [ ] E14-S09 hero: detect the gated teaser and skip (needs S02-S04) (docs/tickets/E14-S09-hero-skip-gated-teaser.md)
+- [ ] E14-S10 ictergezocht: skip Cloudflare challenge pages cleanly, no bypass; README note (needs S02-S04) (docs/tickets/E14-S10-ictergezocht-skip-cloudflare-challenge.md)
+- [ ] E14-S11 circle8 + sevenstars: diagnose why Cookiebot still blocks (live probe), fix selector/hide list (docs/tickets/E14-S11-cookiebot-circle8-sevenstars.md)
+- [ ] E14-S12 wearedevelopers: replace the `:has()` selector with a stable one (docs/tickets/E14-S12-wearedevelopers-stable-selector.md)
+- [ ] E14-S13 iamexpat: narrower wrapper, hide extra widgets, retry on "not attached" (after S01/S02: same `screenshots.py`) (docs/tickets/E14-S13-iamexpat-narrow-wrapper-and-retry.md)
+- [ ] E14-S14 pro_act: hide the cookie consent dialog and dimmer (docs/tickets/E14-S14-pro-act-hide-consent-dialog.md)
+- [ ] E14-S15 synprofs: hide the sticky header (docs/tickets/E14-S15-synprofs-hide-sticky-header.md)
+- [ ] E14-S16 harveynash: hide the Reageren button, check the faded text (docs/tickets/E14-S16-harveynash-hide-reageren-button.md)
+- [ ] E14-S17 stone_interim: find a live selector with a probe or document BLOCKED (docs/tickets/E14-S17-stone-interim-live-selector.md)
+- [ ] GATE-4 full-suite gate agent (scraper + app) after E14-S17
+
+### Part 3 — QA
+
+- [ ] E14-S18 Re-run screenshots for the fixed sites, visual check of 8 PNGs, counts, record `docs/e14-qa-results.md` (live network) (docs/tickets/E14-S18-rerun-qa-and-record-results.md)
+
+## Epic 15 — Stale (delisted) postings
+
+**GOAL (set 2026-10-05):** complete E15-S01..S10 via `/run-stories` with cheap subagents, one story at a time. Owner decision: "Delisted postings: give those status 'stale'. Stale does not count for the main page as a match and shows in the resume detail page as a dark gray non-responsive row for 2 days. After 2 stale days the job is completely hidden."
+Rules: story agents run ONLY the tests applicable to their change (never the full suite). Scraper stories follow Appendix A + B; app stories follow Appendix A only.
+GATE-5 (full suites by a SEPARATE fix-it subagent, `scraper/` and `app/`): after E15-S09 (the last code story). E15-S10 is offline QA (no network); it only uses scratchpad copies and an own app instance on port 5001 with a scratch DB (never `app/instance/matches.db`, never the owner's port 5000).
+
+Design (verified against the code; every story encodes it):
+- Single interface stays the job markdown. The scraper already marks delisted postings `jobs.is_stale = 1` in `scraper.db`, but stores NO date, and `mark_stale_not_seen_since` re-marks stale rows on every run. E15-S02 adds `stale_since TEXT` (set once with COALESCE, cleared on upsert); the pipeline (S03) writes the bullet `- Stale since: YYYY-MM-DD` (local date) into the markdown when a posting newly goes stale, never resets it, and removes it when the posting is seen live again. `rebuild` (S04) keeps it (a rebuild used to silently un-stale rows via `upsert`); `stale-sync` (S05) backfills/repairs from `scraper.db` and dates undated stale rows with the day it runs (no real marking date exists).
+- The app never reads `scraper.db`. `webapp/jobs.py` reads the bullet itself (`resume-matcher/build_report.py` must not be edited): `read_stale_since`, `parse_job_file` gains `stale_since`, `stale_state(stale_since, today=None)`: days = today - since; 0..2 -> `stale` (inclusive of day 2; future dates also stale), 3 or more (strictly more than 2 full days) -> `hidden`, no date -> `live`; a missing job file counts as `live`.
+- Main page `/` (S07): only `live` matches in `resume-match-data` (stale and hidden excluded from counts, stats, threshold data).
+- Resume detail (S08): live rows as before; `stale` rows in a second `<tbody class="stale-rows">` (always sorted last, since `makeSortable` only reorders the first tbody; the threshold slider still filters them), dark gray `.stale-row`, `aria-disabled="true"`, no link, no status form/select, badge "stale since <date>", user status (e.g. Applied) shown as plain text; `hidden` omitted. No `app.js` change.
+- Hidden jobs (S09): omitted everywhere; job detail, its screenshot and the status endpoint return 404 via the existing styled 404. Stale jobs (0-2 days): job detail still opens (200, read-only) with a "Delisted on <date>" notice; screenshot route serves; status POST returns 409. A stale job the user marked Applied follows the same 2-day rule; persisted match rows are never modified.
+- No blocker found. Ambiguities resolved: undated stale rows get today's date at first `stale-sync`; `rebuild` revival bug fixed in S04; rematch still stores matches for stale/hidden files (state is evaluated at read time).
+Same-file chains (strictly sequential): scraper `pipeline.py` (Epic 14 S03/S06/S07, then E15-S03), `cli.py` (E14-S05/S06, then E15-S05), `markdown_export.py` (E14-S07, then E15-S01), `db.py` (E15-S02); app `routes.py` and `test_routes.py` S07 -> S08 -> S09; `style.css` S08 -> S09; `jobs.py`/`test_jobs.py` S06. Never run two scraper stories at once; one scraper and one app story may run in parallel when they share no files. Epic 15 starts after Epic 14's last code story (shared scraper files); the app stories S06-S09 may run earlier.
+Scraper repo note: S01-S05 commit in the SCRAPER repo (`E15-S<nn>: ...`); S06-S10 and `docs/` commit in the JOB-HUNTER repo.
+
+### Part 1 — Scraper (writes and keeps the bullet)
+
+- [ ] E15-S01 markdown_export: optional `- Stale since:` bullet, `set_stale_line`, `md_path_for` (docs/tickets/E15-S01-scraper-stale-since-markdown-bullet.md)
+- [ ] E15-S02 scraper.db: `stale_since` column + migration, `list_newly_stale`, stale-state helpers (docs/tickets/E15-S02-scraper-db-stale-since-column.md)
+- [ ] E15-S03 pipeline: set the bullet when a posting goes stale (once), clear it when seen live again (docs/tickets/E15-S03-scraper-pipeline-set-and-clear-stale-since.md)
+- [ ] E15-S04 rebuild keeps stale state and bullet (docs/tickets/E15-S04-scraper-rebuild-keeps-stale-state.md)
+- [ ] E15-S05 `stale-sync` command to backfill/repair bullets from scraper.db (docs/tickets/E15-S05-scraper-stale-sync-command.md)
+
+### Part 2 — App
+
+- [ ] E15-S06 app: read `stale_since`, `stale_state` helper (docs/tickets/E15-S06-app-parse-stale-since-and-stale-state.md)
+- [ ] E15-S07 app: resume list page counts only live matches (docs/tickets/E15-S07-app-resume-list-excludes-stale.md)
+- [ ] E15-S08 app: resume detail shows stale matches as dark-gray non-responsive rows, hides expired ones (docs/tickets/E15-S08-app-resume-detail-stale-rows.md)
+- [ ] E15-S09 app: job detail notice for stale, 404 for hidden (detail, screenshot, status) (docs/tickets/E15-S09-app-job-detail-stale-and-hidden-404.md)
+- [ ] GATE-5 full-suite gate agent (scraper + app) after E15-S09
+
+### Part 3 — QA
+
+- [ ] E15-S10 Drive the real app on port 5001 with stale fixtures (0/1/2/3 days), `stale-sync` on copies, record `docs/e15-qa-results.md` (docs/tickets/E15-S10-qa-and-record-results.md)
