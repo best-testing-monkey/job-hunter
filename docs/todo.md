@@ -214,7 +214,7 @@ Each story needs the shared stories it names. Each edits only its own adapter + 
 
 - [x] E14-S08 guru: click "Show more" before capture (needs S01, S03, S04) (docs/tickets/E14-S08-guru-expand-show-more.md)
 - [x] E14-S09 hero: detect the gated teaser and skip (needs S02-S04) (docs/tickets/E14-S09-hero-skip-gated-teaser.md)
-- [ ] E14-S10 ictergezocht: skip Cloudflare challenge pages cleanly, no bypass; README note (needs S02-S04) (docs/tickets/E14-S10-ictergezocht-skip-cloudflare-challenge.md)
+- [x] E14-S10 ictergezocht: skip Cloudflare challenge pages cleanly, no bypass; README note (needs S02-S04) (docs/tickets/E14-S10-ictergezocht-skip-cloudflare-challenge.md)
 - [ ] E14-S11 circle8 + sevenstars: diagnose why Cookiebot still blocks (live probe), fix selector/hide list (docs/tickets/E14-S11-cookiebot-circle8-sevenstars.md)
 - [ ] E14-S12 wearedevelopers: replace the `:has()` selector with a stable one (docs/tickets/E14-S12-wearedevelopers-stable-selector.md)
 - [ ] E14-S13 iamexpat: narrower wrapper, hide extra widgets, retry on "not attached" (after S01/S02: same `screenshots.py`) (docs/tickets/E14-S13-iamexpat-narrow-wrapper-and-retry.md)
