@@ -307,7 +307,7 @@ Scraper repo note: S01-S15 commit in the SCRAPER repo (`E16-S<nn>: ...`); S16 an
 - [x] E16-S12 `capture_element` skips gone pages (404/410/unrelated redirect/title marker) (docs/tickets/E16-S12-capture-skip-gone-pages.md)
 - [x] E16-S13 pipeline and backfill pass `GoneCheck` to `capture_element` (docs/tickets/E16-S13-pass-gone-check-to-capture.md)
 - [x] E16-S14 Gone settings: working_nomads, circle8, hero, harveynash (docs/tickets/E16-S14-gone-settings-batch-a.md)
-- [ ] E16-S15 Gone settings: sevenstars, synprofs, pro_act, stone_interim (docs/tickets/E16-S15-gone-settings-batch-b.md)
+- [x] E16-S15 Gone settings: sevenstars, synprofs, pro_act, stone_interim (docs/tickets/E16-S15-gone-settings-batch-b.md)
 - [ ] GATE-6 full-suite gate agent (scraper + app) after E16-S15
 
 ### Part 3 — QA and publish
