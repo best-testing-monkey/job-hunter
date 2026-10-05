@@ -246,7 +246,8 @@ Scraper repo note: S01-S05 commit in the SCRAPER repo (`E15-S<nn>: ...`); S06-S1
 
 - [x] E15-S01 markdown_export: optional `- Stale since:` bullet, `set_stale_line`, `md_path_for` (docs/tickets/E15-S01-scraper-stale-since-markdown-bullet.md)
 - [x] E15-S02 scraper.db: `stale_since` column + migration, `list_newly_stale`, stale-state helpers (docs/tickets/E15-S02-scraper-db-stale-since-column.md)
-- [ ] E15-S03 pipeline: set the bullet when a posting goes stale (once), clear it when seen live again (docs/tickets/E15-S03-scraper-pipeline-set-and-clear-stale-since.md)
+- [x] E15-S03 pipeline: set the bullet when a posting goes stale (once), clear it when seen live again (docs/tickets/E15-S03-scraper-pipeline-set-and-clear-stale-since.md)
+- [ ] E15-S03b Fix `find_duplicate` self-matches and repair 703 self-duplicate rows in scraper.db (docs/tickets/E15-S03b-fix-self-duplicates.md) — found during S03; explains why re-scrapes skipped most postings
 - [ ] E15-S04 rebuild keeps stale state and bullet (docs/tickets/E15-S04-scraper-rebuild-keeps-stale-state.md)
 - [ ] E15-S05 `stale-sync` command to backfill/repair bullets from scraper.db (docs/tickets/E15-S05-scraper-stale-sync-command.md)
 
